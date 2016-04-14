@@ -4,6 +4,9 @@ import javax.swing.JFrame;
 
 public class Application extends JFrame {
 
+
+
+
     public Application() {
 
         initUI();
@@ -15,9 +18,10 @@ public class Application extends JFrame {
         setResizable(false);
         pack();
 
-        setTitle("Application");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(Commons.WIDTH, Commons.HEIGTH);
         setLocationRelativeTo(null);
+        setResizable(false);
+        setVisible(true);
     }
 
     public static void main(String[] args) {

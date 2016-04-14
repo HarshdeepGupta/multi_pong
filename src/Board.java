@@ -1,25 +1,20 @@
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
-import java.awt.Toolkit;
 
 import javax.swing.JPanel;
 
-public class Board extends JPanel implements Runnable{
+public class Board extends JPanel implements Runnable {
 
-    private final int B_WIDTH = 550;
-    private final int B_HEIGHT = 550;
-    private final int INITIAL_X = 0;
-    private final int INITIAL_Y = 0;
+
     private final int DELAY = 25;
 
     private Thread animator;
-    private int x, y;
+    private Paddle paddle;
+    private Ball ball;
+
 
 
     public Board(){
@@ -28,10 +23,12 @@ public class Board extends JPanel implements Runnable{
 
     private void initBoard() {
         setBackground(Color.BLACK);
-        setPreferredSize(new Dimension(B_WIDTH, B_HEIGHT));
+
+        addKeyListener(new TAdapter());
+        setFocusable(true);
         setDoubleBuffered(true);
-        x = INITIAL_X;
-        y = INITIAL_Y;
+        paddle = new Paddle();
+        ball = new Ball();
     }
 
 
@@ -47,47 +44,45 @@ public class Board extends JPanel implements Runnable{
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        drawDonut(g);
-    }
-
-
-
-
-    private void drawDonut(Graphics g) {
-
         Graphics2D g2d = (Graphics2D) g;
 
-        RenderingHints rh
-                = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        rh.put(RenderingHints.KEY_RENDERING,
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
                 RenderingHints.VALUE_RENDER_QUALITY);
 
-        g2d.setRenderingHints(rh);
+        drawGameObjects(g2d);
+        Toolkit.getDefaultToolkit().sync();
+    }
 
-        Dimension size = getSize();
-        double w = size.getWidth();
-        double h = size.getHeight();
 
-        Ellipse2D e = new Ellipse2D.Double(x, y, 80, 130);
-        g2d.setStroke(new BasicStroke(1));
-        g2d.setColor(Color.gray);
-        g2d.draw(e);
+
+
+    private void drawGameObjects(Graphics2D g2d) {
+
+
+        g2d.drawImage(paddle.getImage(), paddle.getX(), paddle.getY(),
+                paddle.getWidth(), paddle.getHeight(), this);
+        g2d.drawImage(ball.getImage(),ball.getX(),ball.getY(),ball.getWidth(),ball.getHeight(),this);
 
     }
 
-    private void cycle() {
+    private class TAdapter extends KeyAdapter {
 
-        x += 1;
-        y += 1;
+        @Override
+        public void keyReleased(KeyEvent e) {
+            paddle.keyReleased(e);
+        }
 
-        if (y > B_HEIGHT) {
-
-            y = INITIAL_Y;
-            x = INITIAL_X;
+        @Override
+        public void keyPressed(KeyEvent e) {
+            paddle.keyPressed(e);
         }
     }
+
+
+
 
     @Override
     public void run() {
@@ -98,8 +93,10 @@ public class Board extends JPanel implements Runnable{
 
         while (true) {
 
-            cycle();
+            paddle.movePaddle();
+            ball.moveBall();
             repaint();
+//            System.out.println("Here");
 
             timeDiff = System.currentTimeMillis() - beforeTime;
             sleep = DELAY - timeDiff;
