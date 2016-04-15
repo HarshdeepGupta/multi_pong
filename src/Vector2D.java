@@ -5,8 +5,8 @@ import java.lang.*;
 
 public class Vector2D {
 
-    public int X;
-    public int Y;
+    int X;
+    int Y;
 
     public Vector2D(){
         this.X = 0;
@@ -19,30 +19,27 @@ public class Vector2D {
         this.Y = y;
     }
 
-    public Vector2D add(Vector2D x, Vector2D y){
-        return new Vector2D(x.getX()+y.getX(),x.getY()+y.getY());
+    public Vector2D add(Vector2D V) {
+        return new Vector2D(this.X + V.X, this.Y + V.Y);
     }
 
-    public Vector2D sub(Vector2D x, Vector2D y){
-        return new Vector2D(x.getX()-y.getX(),x.getY()-y.getY());
+    public Vector2D sub( Vector2D V) {
+        return new Vector2D(this.X - V.X,this.Y - V.Y);
     }
 
-    public double dot(Vector2D x, Vector2D y){
-        return x.getX()*y.getX()+x.getY()*y.getY();
+    public int dot( Vector2D V){
+        return this.X*V.X + this.Y*V.Y;
+    }
+    Vector2D scalarMult(int l){
+        return new Vector2D(this.X*l,this.Y*l);
     }
 
 
-    public double length(Vector2D x){
-        return (Math.sqrt(x.getX()*x.getX()+x.getY()*x.getY()));
+    public double length(){
+
+        return Math.sqrt(this.dot(this)) ;
     }
 
 
-    private int getX(){
-        return this.X;
-    }
-
-    private int getY(){
-        return this.Y;
-    }
 
 }

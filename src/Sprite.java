@@ -48,5 +48,10 @@ public class Sprite {
         this.width = width;
     }
 
+    Rectangle getRect() {
+        return new Rectangle(position.X, position.Y,
+                image.getWidth(null), image.getHeight(null));
+    }
+
 
 }

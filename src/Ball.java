@@ -5,7 +5,7 @@ import javax.swing.*;
  */
 public class Ball extends Sprite implements Commons {
 
-    private Vector2D ballVelocity;
+    protected Vector2D ballVelocity;
     private int ballSpeed;
 
     public Ball() {
@@ -13,7 +13,7 @@ public class Ball extends Sprite implements Commons {
         ballVelocity = new Vector2D();
         position = new Vector2D();
 
-        ballSpeed = 3;
+        ballSpeed = 6;
 
         ballVelocity.X = ballSpeed;
         ballVelocity.Y = ballSpeed;
