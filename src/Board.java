@@ -30,7 +30,7 @@ public class Board extends JPanel implements Runnable {
         Paddle ID 4 is at the right edge
         */
         //give the paddle ID here
-        SET_KEY_LISTENER_ON = 3;
+        SET_KEY_LISTENER_ON = 4;
 
         addKeyListener(new TAdapter());
         setFocusable(true);
@@ -172,24 +172,14 @@ public class Board extends JPanel implements Runnable {
 
     }
 
+    public Paddle[] getPaddleArray(){
+        return paddleArray;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public void setPaddleArray(int id,int speed,int velocity_x,int velocity_y){
+        System.out.println(id);
+        paddleArray[id].setPaddleSpeed(speed);
+        paddleArray[id].setPaddleVelocity(velocity_x,velocity_y);
+    }
 
 }
