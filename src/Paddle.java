@@ -8,21 +8,27 @@ public class Paddle extends Sprite implements Commons {
 
     protected Vector2D paddleVelocity;
     Vector2D normal;
-    private int paddleID;
-    /*Paddle ID 1 is at the bottom edge, new :- top edge
-    Paddle ID 2 is at the top edge, new :- right edge
-    Paddle ID 3 is at the left edge, new :- left edge
-    Paddle ID 4 is at the right edge, new :- bottom edge
+    protected int paddleID;
+    protected int score;
+    //move_x = true means paddle can movel only in x direction
+    protected boolean move_x, move_y;
+    /*Paddle ID 1 is at the  top edge
+    Paddle ID 2 is at the right edge
+    Paddle ID 3 is at the  left edge
+    Paddle ID 4 is at the bottom edge
     */
-    private int paddleSpeed;
+    protected int paddleSpeed;
     public Paddle(int paddleID){
 
 
         paddleVelocity = new Vector2D();
         position = new Vector2D();
         normal = new Vector2D();
+        score = 0;
 
         this.paddleID = paddleID;
+        move_x = false;
+        move_y = false;
         resetState();
 
 
@@ -108,6 +114,7 @@ public class Paddle extends Sprite implements Commons {
             //Initialize the normal vector of the paddle
             normal.X = 0;//0
             normal.Y = -1;//1
+            move_x = true;
             //Set the image
             ImageIcon ii = new ImageIcon("paddle_horizontal.png");
             image =  ii.getImage();
@@ -119,6 +126,7 @@ public class Paddle extends Sprite implements Commons {
             //Initialize the normal vector of the paddle
             normal.X = 1;//0
             normal.Y = 0;//-1
+            move_y = true;
             //Set the image
             ImageIcon ii = new ImageIcon("paddle_vertical.png");
             image =  ii.getImage();
@@ -131,6 +139,7 @@ public class Paddle extends Sprite implements Commons {
             //Initialize the normal vector of the paddle
             normal.X = -1;
             normal.Y = 0;
+            move_y = true;
             //Set the image
             ImageIcon ii = new ImageIcon("paddle_vertical.png");
             image =  ii.getImage();
@@ -143,6 +152,7 @@ public class Paddle extends Sprite implements Commons {
             //Initialize the normal vector of the paddle
             normal.X = 0;
             normal.Y = 1;
+            move_x = true;
             //Set the image
             ImageIcon ii = new ImageIcon("paddle_horizontal.png");
             image =  ii.getImage();
