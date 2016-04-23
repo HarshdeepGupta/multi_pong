@@ -12,6 +12,7 @@ public class Board extends JPanel implements Runnable {
     private Thread animator;
     private Paddle[] paddleArray;
     private Ball ball;
+    private Bot bot;
 
     private int SET_KEY_LISTENER_ON;
 
@@ -24,10 +25,10 @@ public class Board extends JPanel implements Runnable {
     private void initBoard() {
         setBackground(Color.BLACK);
 
-        /*Paddle ID 1 is at the bottom edge
-        Paddle ID 2 is at the top edge
-        Paddle ID 3 is at the left edge
-        Paddle ID 4 is at the right edge
+        /*Paddle ID 1 is at the  top edge
+        Paddle ID 2 is at the right edge
+        Paddle ID 3 is at the  left edge
+        Paddle ID 4 is at the bottom edge
         */
         //give the paddle ID here
         SET_KEY_LISTENER_ON = 4;
@@ -41,6 +42,10 @@ public class Board extends JPanel implements Runnable {
         }
 
         ball = new Ball();
+
+        //Initialize the bot and attach it to a paddle
+        bot = new Bot(ball,1);
+        bot.attach(paddleArray[0]);
     }
 
 
@@ -69,14 +74,30 @@ public class Board extends JPanel implements Runnable {
     }
 
 
-
+    ///////////////Code for drawing game starts/////////////
 
     private void drawGameObjects(Graphics2D g2d) {
 
         drawPaddles(g2d);
-        g2d.drawImage(ball.getImage(),ball.getX(),ball.getY(),ball.getWidth(),ball.getHeight(),this);
+        drawBall(g2d);
 
     }
+
+    private void drawBall(Graphics2D g2d) {
+        ball.draw(g2d);
+    }
+
+
+    private void drawPaddles(Graphics2D g2d){
+        Paddle paddle;
+        for(int i = 0; i < NO_OF_PADDLES;i++){
+            paddle = paddleArray[i];
+            paddle.draw(g2d);
+
+        }
+
+    }
+    ///////////////Code for drawing game ends/////////////
 
     private class TAdapter extends KeyAdapter {
 
@@ -95,7 +116,7 @@ public class Board extends JPanel implements Runnable {
 
 
 
-
+    ///////////////Code for updating game state begins////////////////
     @Override
     public void run() {
 
@@ -109,6 +130,7 @@ public class Board extends JPanel implements Runnable {
             movePaddles();
             ball.moveBall();
             checkCollision();
+            bot.updateBot();
             repaint();
 //            System.out.println("Here");
 
@@ -137,15 +159,20 @@ public class Board extends JPanel implements Runnable {
             paddle = paddleArray[i];
             if(ball.getRect().intersects(paddle.getRect())){
                 if(ball.ballVelocity.dot(paddle.normal) > 0){
-//                int vel_X = ball.ballVelocity.X;
-//                int vel_Y = ball.ballVelocity.Y;
-//                vel_X = vel_X - 2*(ball.ballVelocity.dot(paddle.normal));
-//                vel_Y = vel_Y - 2*(ball.ballVelocity.dot(paddle.normal));
-//                ball.ballVelocity.X = vel_X;
-//                ball.ballVelocity.Y = vel_Y;
-                Vector2D vel = ball.ballVelocity;
-                vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
-                ball.ballVelocity = vel;
+//                    int vel_X = ball.ballVelocity.X;
+//                    int vel_Y = ball.ballVelocity.Y;
+//                    vel_X = vel_X - 2*(ball.ballVelocity.dot(paddle.normal));
+//                    vel_Y = vel_Y - 2*(ball.ballVelocity.dot(paddle.normal));
+//                    ball.ballVelocity.X = vel_X;
+//                    ball.ballVelocity.Y = vel_Y;
+                    Vector2D vel = ball.ballVelocity;
+                    vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
+                    ball.ballVelocity = vel;
+                    ball.ballVelocity.add(paddle.paddleVelocity);
+                    //also update the last_hit_by
+                    ball.last_hit_by = paddle.paddleID;
+                    System.out.print(ball.last_hit_by);
+
                 }
             }
 
@@ -155,16 +182,6 @@ public class Board extends JPanel implements Runnable {
 
 
 
-    private void drawPaddles(Graphics2D g2d){
-        Paddle paddle;
-        for(int i = 0; i < NO_OF_PADDLES;i++){
-            paddle = paddleArray[i];
-            g2d.drawImage(paddle.getImage(), paddle.getX(), paddle.getY(),
-                    paddle.getWidth(), paddle.getHeight(), this);
-        }
-
-    }
-
     private void movePaddles() {
         for(int i = 0; i < NO_OF_PADDLES;i++){
             paddleArray[i].movePaddle();
@@ -172,14 +189,16 @@ public class Board extends JPanel implements Runnable {
 
     }
 
-    public Paddle[] getPaddleArray(){
+    Paddle[] getPaddleArray(){
         return paddleArray;
     }
 
-    public void setPaddleArray(int id,int speed,int velocity_x,int velocity_y){
+    void setPaddleArray(int id,int speed,int velocity_x,int velocity_y){
         System.out.println(id);
         paddleArray[id].setPaddleSpeed(speed);
         paddleArray[id].setPaddleVelocity(velocity_x,velocity_y);
     }
+
+    ///////////////Code for updating game state ends////////////////
 
 }

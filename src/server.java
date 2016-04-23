@@ -27,7 +27,7 @@ public class server extends gui{
 
 
     int myid=0;
-    String my_ip = "192.168.0.101";
+    String my_ip = InetAddress.getLocalHost().getHostAddress().toString();
     int my_port = 4456;
     //assign local ip here and port here
 
@@ -43,6 +43,7 @@ public class server extends gui{
     {
 
         super (title);
+        System.out.println(InetAddress.getLocalHost().getHostAddress());
         bHandler = new ButtonHandler ();
         bHandler1 = new ButtonHandler1();
         sendButton.addActionListener (bHandler);
@@ -300,7 +301,7 @@ public class server extends gui{
                                     .concat(String.valueOf(paddles[3].getPaddleVelocity().Y)).concat(")#time=")
                                     .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
                             buf = my_id.getBytes();// here we want our ip-address instead
-                            System.out.println("sent_packet".concat(my_id));
+//                            System.out.println("sent_packet".concat(my_id));
                             for (int i = 0; i < number_of_players; i++) {
                                 InetAddress address = InetAddress.getByName(ip_array[i]);
                                 DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
