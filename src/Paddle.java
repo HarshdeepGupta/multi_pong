@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 
 /**
@@ -36,6 +37,10 @@ public class Paddle extends Sprite implements Commons {
         height = image.getHeight(null);
         paddleSpeed = 4;
 
+    }
+    public void draw(Graphics2D g2d){
+        g2d.drawImage(this.getImage(), this.getX(), this.getY(),
+                this.getWidth(), this.getHeight(), null);
     }
 
     public void movePaddle(){

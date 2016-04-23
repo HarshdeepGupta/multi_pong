@@ -42,8 +42,10 @@ public class Board extends JPanel implements Runnable {
         }
 
         ball = new Ball();
+
+        //Initialize the bot and attach it to a paddle
         bot = new Bot(ball,1);
-        bot.attach(paddleArray[1]);
+        bot.attach(paddleArray[0]);
     }
 
 
@@ -77,18 +79,21 @@ public class Board extends JPanel implements Runnable {
     private void drawGameObjects(Graphics2D g2d) {
 
         drawPaddles(g2d);
-        g2d.drawImage(ball.getImage(),ball.getX(),ball.getY(),ball.getWidth(),ball.getHeight(),this);
+        drawBall(g2d);
 
     }
 
+    private void drawBall(Graphics2D g2d) {
+        ball.draw(g2d);
+    }
 
 
     private void drawPaddles(Graphics2D g2d){
         Paddle paddle;
         for(int i = 0; i < NO_OF_PADDLES;i++){
             paddle = paddleArray[i];
-            g2d.drawImage(paddle.getImage(), paddle.getX(), paddle.getY(),
-                    paddle.getWidth(), paddle.getHeight(), this);
+            paddle.draw(g2d);
+
         }
 
     }

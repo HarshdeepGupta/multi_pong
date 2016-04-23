@@ -15,7 +15,17 @@ public class Bot {
     }
 
     void attach(Paddle paddle){
-        this.paddle = paddle;
+        if(paddle != null){
+            this.paddle = paddle;
+        }
+        else{
+            System.out.println("Cannot attach bot to null paddle");
+        }
+
+
+    }
+    void detach(){
+        this.paddle = null;
 
     }
 

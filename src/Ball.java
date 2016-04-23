@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * Created by hd on 14/4/16.
@@ -72,4 +73,7 @@ public class Ball extends Sprite implements Commons {
     }
 
 
+    public void draw(Graphics2D g2d) {
+        g2d.drawImage(this.getImage(),this.getX(),this.getY(),this.getWidth(),this.getHeight(),null);
+    }
 }
