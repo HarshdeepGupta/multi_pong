@@ -37,7 +37,7 @@ public class server extends gui{
 
     static Paddle[] paddles;
 
-    Container container1;
+    JFrame jf;
 
     public server (String title) throws IOException
     {
@@ -48,7 +48,15 @@ public class server extends gui{
         sendButton.addActionListener (bHandler);
         connect.addActionListener(bHandler1);
         socket1 = new DatagramSocket (my_port);
-        container1 = this;
+        jf = this;
+        initUI();
+    }
+
+    private void initUI() {
+
+//        setSize(500, 500);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
 
@@ -61,7 +69,7 @@ public class server extends gui{
                 // here we send our ip and our port to the host
                 //DatagramSocket socket = new DatagramSocket ();
                 byte[] buf = new byte[256];
-                String ip_address = txArea.getText ();
+                String ip_address = txArea.getText (); // here the ip_address of the host has to be entered and read from the txArea
                 String temp="0#ip=";//127.0.0.1
                 String my_ip1 = temp.concat(my_ip);
                 my_ip1 = my_ip1.concat("#port=").concat(String.valueOf(my_port)).concat("#time=").concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
@@ -102,12 +110,12 @@ public class server extends gui{
             catch (IOException e)
             {
             }
-            container1.setVisible(false);
+            jf.setVisible(false);
             board = new Board();
             JFrame new_frame= new JFrame();
             new_frame.add(board);
             new_frame.pack();
-            new_frame.setSize(Commons.WIDTH, Commons.HEIGTH);
+            new_frame.setSize(500,520);
             new_frame.setLocationRelativeTo(null);
             new_frame.setResizable(false);
             new_frame.setVisible(true);
@@ -248,13 +256,13 @@ public class server extends gui{
                                     }
                                     }
                                 }
-                                container1.setVisible(false);
+                                jf.setVisible(false);
                                 board = new Board();
                                 JFrame new_frame= new JFrame();
                                 new_frame.setTitle("Multipong Intern");
                                 new_frame.add(board);
                                 new_frame.pack();
-                                new_frame.setSize(Commons.WIDTH, Commons.HEIGTH);
+                                new_frame.setSize(500,520);
                                 new_frame.setLocationRelativeTo(null);
                                 new_frame.setResizable(false);
                                 new_frame.setVisible(true);

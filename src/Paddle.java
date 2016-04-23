@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 /**
  * Created by hd on 14/4/16.
  */
+
 public class Paddle extends Sprite implements Commons {
 
     protected Vector2D paddleVelocity;

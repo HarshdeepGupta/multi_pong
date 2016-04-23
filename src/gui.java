@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import javax.swing.*;
 import javax.swing.event.*;
 
@@ -19,10 +20,12 @@ public class gui extends JFrame{
         txArea = new JTextArea (6, 40);
         rxArea = new JTextArea (6, 40);
         sendButton = new JButton("Start");
+        sendButton.setToolTipText("Start a new game");
         connect = new JButton("Connect");
+        connect.setToolTipText("Connect to an Existing Game");
         container.add (rxArea);
         container.add (txArea);
         container.add (sendButton);
         container.add (connect);
-    }
+        }
 }
