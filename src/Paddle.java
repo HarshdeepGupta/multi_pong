@@ -65,8 +65,8 @@ public class Paddle extends Sprite implements Commons {
                 Y = 0;
             }
 
-            if (Y >= HEIGTH-height) {
-                Y = HEIGTH-height;
+            if (Y >= HEIGHT-height) {
+                Y = HEIGHT-height;
             }
             position.Y = Y;
         }

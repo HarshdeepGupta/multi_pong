@@ -39,6 +39,22 @@ public class server extends gui{
 
     JFrame jf;
 
+    public server (String title, String info) throws IOException
+    {
+
+        super (title);
+        System.out.println(InetAddress.getLocalHost().getHostAddress());
+        bHandler = new ButtonHandler ();
+        bHandler1 = new ButtonHandler1();
+        sendButton.addActionListener (bHandler);
+        connect.addActionListener(bHandler1);
+        socket1 = new DatagramSocket (my_port);
+        txArea.setText(info);
+        rxArea.setText(info);
+        jf = this;
+        initUI();
+    }
+
     public server (String title) throws IOException
     {
 
