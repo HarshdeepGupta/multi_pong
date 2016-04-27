@@ -12,12 +12,13 @@ public class Paddle extends Sprite implements Commons {
     Vector2D normal;
     protected int paddleID;
     protected int score;
-    //move_x = true means paddle can movel only in x direction
+    //move_x = true means paddle can move only in x direction
     protected boolean move_x, move_y;
-    /*Paddle ID 1 is at the  top edge
-    Paddle ID 2 is at the right edge
-    Paddle ID 3 is at the  left edge
-    Paddle ID 4 is at the bottom edge
+    protected boolean isbot;
+    /*Paddle ID 1 is at the bottom edge
+    Paddle ID 2 is at the left edge
+    Paddle ID 3 is at the top edge
+    Paddle ID 4 is at the right edge
     */
     protected int paddleSpeed;
     public Paddle(int paddleID){
@@ -32,7 +33,7 @@ public class Paddle extends Sprite implements Commons {
         move_x = false;
         move_y = false;
         resetState();
-
+        isbot = false;
 
         width = image.getWidth(null);
         height = image.getHeight(null);
@@ -46,7 +47,7 @@ public class Paddle extends Sprite implements Commons {
 
     public void movePaddle(){
 
-        if(paddleID==1||paddleID==4){
+        if(paddleID==1||paddleID==2){
             int X = position.X;
             X += paddleVelocity.X;
             if (X <= 0) {
@@ -58,7 +59,7 @@ public class Paddle extends Sprite implements Commons {
             }
             position.X = X;
         }
-        if(paddleID==3||paddleID==2){
+        if(paddleID==3||paddleID==4){
             int Y = position.Y;
             Y += paddleVelocity.Y;
             if (Y <= 0) {
@@ -78,7 +79,7 @@ public class Paddle extends Sprite implements Commons {
     public void keyPressed(KeyEvent e) {
 
         int key = e.getKeyCode();
-        if(paddleID==1||paddleID==4){
+        if(paddleID==1||paddleID==2){
             if (key == KeyEvent.VK_LEFT) {
                 paddleVelocity.X = -paddleSpeed;
             }
@@ -88,7 +89,7 @@ public class Paddle extends Sprite implements Commons {
             }
 
         }
-        if(paddleID==3||paddleID==2){
+        if(paddleID==3||paddleID==4){
             if (key == KeyEvent.VK_LEFT) {
                 paddleVelocity.Y = -paddleSpeed;
             }
@@ -119,22 +120,22 @@ public class Paddle extends Sprite implements Commons {
             position.Y = INIT_PADDLE1_Y;
             //Initialize the normal vector of the paddle
             normal.X = 0;//0
-            normal.Y = -1;//1
+            normal.Y = 1;//1
             move_x = true;
             //Set the image
             ImageIcon ii = new ImageIcon("paddle_horizontal.png");
             image =  ii.getImage();
         }
-        else if(paddleID ==2){
+        else if(paddleID == 2){
             //Initialize the position on the board
             position.X = INIT_PADDLE2_X;
             position.Y = INIT_PADDLE2_Y;
             //Initialize the normal vector of the paddle
-            normal.X = 1;//0
-            normal.Y = 0;//-1
-            move_y = true;
+            normal.X = 0;
+            normal.Y = -1;
+            move_x = true;
             //Set the image
-            ImageIcon ii = new ImageIcon("paddle_vertical.png");
+            ImageIcon ii = new ImageIcon("paddle_horizontal.png");
             image =  ii.getImage();
         }
 
@@ -143,7 +144,7 @@ public class Paddle extends Sprite implements Commons {
             position.X = INIT_PADDLE3_X;
             position.Y = INIT_PADDLE3_Y;
             //Initialize the normal vector of the paddle
-            normal.X = -1;
+            normal.X = 1;
             normal.Y = 0;
             move_y = true;
             //Set the image
@@ -156,11 +157,11 @@ public class Paddle extends Sprite implements Commons {
             position.X = INIT_PADDLE4_X;
             position.Y = INIT_PADDLE4_Y;
             //Initialize the normal vector of the paddle
-            normal.X = 0;
-            normal.Y = 1;
-            move_x = true;
+            normal.X = -1;
+            normal.Y = 0;
+            move_y = true;
             //Set the image
-            ImageIcon ii = new ImageIcon("paddle_horizontal.png");
+            ImageIcon ii = new ImageIcon("paddle_vertical.png");
             image =  ii.getImage();
         }
         else{
@@ -184,6 +185,13 @@ public class Paddle extends Sprite implements Commons {
     public void setPaddleVelocity(int x,int y){
         paddleVelocity.X = x;
         paddleVelocity.Y = y;
+    }
+
+    public void setIsbot(boolean isbot){
+        this.isbot = isbot;
+    }
+    public boolean getIsBot(){
+        return isbot;
     }
 
 }

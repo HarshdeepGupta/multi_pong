@@ -21,7 +21,7 @@ public class Application extends JFrame {
     public Application() {
 
         try {
-            audioInputStream = AudioSystem.getAudioInputStream(new File("/Users/anmol/Desktop/Sem 6/COP 290/multipong/tune.wav").getAbsoluteFile());
+            audioInputStream = AudioSystem.getAudioInputStream(new File("tune.wav").getAbsoluteFile());
             clip = AudioSystem.getClip();
             clip.open(audioInputStream);
         } catch(Exception ex) {

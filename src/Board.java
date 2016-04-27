@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import javax.swing.JPanel;
@@ -16,35 +17,46 @@ public class Board extends JPanel implements Runnable {
     private Thread animator;
     private Paddle[] paddleArray;
     private Ball ball;
-    private Bot bot;
+    private Bot[] bot_array_multi;
+    private Bot[] botarray;
+    private int myid;
     private boolean running;
-    private int lives;
+    private int[] lives = new int[4];
 
 
     private long waitTimer;
     private long waitTimerDiff;
     private boolean wait;
     private int waitDelay = 1000 ;
-
     public static ArrayList<powerUp> powerUps;
     public static ArrayList<powerUp> powerCollect;
+    private boolean single_player;
+    private int difficult;
+    private int number_of_players;
+    //public static ArrayList<powerUp> powerUps;
+
 
     private int SET_KEY_LISTENER_ON;
+    AffineTransform at = new AffineTransform();
 
 
-
-    public Board(){
-        initBoard();
+    public Board(int id,boolean single_player,int players){
+        this.single_player = single_player;
+        this.number_of_players = players;
+        initBoard(id);
     }
 
-    private void initBoard() {
+
+    private void initBoard(int id) {
         setBackground(Color.cyan);
+        myid = id;
         setPreferredSize(new Dimension(WIDTH,HEIGHT));
         setFocusable(true);
         requestFocus();
-        lives = 3;
         powerUps = new ArrayList<powerUp>();
         powerCollect = new ArrayList<powerUp>();
+
+        difficult=1;
 
         /*Paddle ID 1 is at the  top edge
         Paddle ID 2 is at the right edge
@@ -65,8 +77,45 @@ public class Board extends JPanel implements Runnable {
         ball = new Ball();
 
         //Initialize the bot and attach it to a paddle
-        bot = new Bot(ball,1);
-        bot.attach(paddleArray[0]);
+        //bot = new Bot(ball,1);
+        //bot.attach(paddleArray[0]);
+        switch (myid){
+            case 0:
+                at.rotate(0);
+                break;
+            case 1:
+                at.rotate(0);
+                break;
+            case 2:
+                at.rotate(0);
+                break;
+            case 3:
+                at.rotate(0);
+                break;
+            default:
+
+        }
+
+        if(single_player){
+            botarray = new Bot[3];
+            for (int i = 0;i<3;i++){
+                botarray[i] = new Bot(ball,difficult);
+                botarray[i].attach(paddleArray[i+1]);
+            }
+        }
+        else{
+            botarray = new Bot[4-1-number_of_players];
+            for (int i=0;i<botarray.length;i++){
+                botarray[i] = new Bot(ball,difficult);
+                botarray[i].attach(paddleArray[number_of_players+i+1]);
+            }
+        }
+
+        for(int i=0;i<4;i++){
+            lives[i]=3;
+        }
+
+        bot_array_multi = new Bot[3];// To store dynamically created bots on disconnection
     }
 
 
@@ -93,8 +142,15 @@ public class Board extends JPanel implements Runnable {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
+        g2d.setTransform(at);
+
+
+
         drawGameObjects(g2d);
         Toolkit.getDefaultToolkit().sync();
+
+
+
     }
 
 
@@ -124,7 +180,7 @@ public class Board extends JPanel implements Runnable {
     }
 
     private void drawPlayerLives(Graphics2D g2d){
-        for(int i = 0; i < lives; i++){
+        for(int i = 0; i < lives[0]; i++){
             g2d.setColor(Color.WHITE);
             g2d.fillOval(20 + (20 * i), 450, 10, 10);
             g2d.setStroke(new BasicStroke(3));
@@ -209,6 +265,12 @@ public class Board extends JPanel implements Runnable {
                 }
             }
 
+            //movePaddles();
+            //ball.moveBall();
+            //checkCollision();
+
+            //repaint();
+
             if (wait){
                 beforeTime = System.currentTimeMillis();
                 movePaddles();
@@ -235,9 +297,23 @@ public class Board extends JPanel implements Runnable {
                     System.out.println("Here4");
                     powerUps.add(new powerUp(1, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
-                bot.updateBot();
 
-                //update power ups
+/*                //update power ups
+=======
+*/
+                if(single_player) {
+                    for(int i=0;i<3;i++)
+                        if (botarray[i].is_attached()) {
+                            botarray[i].updateBot();
+                        }
+                }
+                else{
+                    for(int i=0;i<botarray.length;i++)
+                        if (botarray[i].is_attached()) {
+                            botarray[i].updateBot();
+                        }
+                }
+               //update power ups
                 for(int i = 0; i < powerUps.size(); i++){
                     boolean remove = powerUps.get(i).update();
                     if (remove){
@@ -282,7 +358,7 @@ public class Board extends JPanel implements Runnable {
 //                    ball.ballVelocity.X = vel_X;
 //                    ball.ballVelocity.Y = vel_Y;
                     Vector2D vel = ball.ballVelocity;
-                    vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
+                    vel = vel.sub( paddle.normal.scalarMult(2*(vel.dot(paddle.normal))));
                     ball.ballVelocity = vel;
                     ball.ballVelocity.add(paddle.paddleVelocity);
                     //also update the last_hit_by
@@ -312,7 +388,7 @@ public class Board extends JPanel implements Runnable {
                 int type = p.gettype();
                 if (type == 1){
                     System.out.println("Here9");
-                    lives++;
+                    lives[ball.last_hit_by]++;
                 }
                 if (type == 2){
                     System.out.println("Here10");
@@ -322,11 +398,11 @@ public class Board extends JPanel implements Runnable {
                 }
                 if (type == 3){
                     System.out.println("Here11");
-                    lives++;
+                    lives[ball.last_hit_by]++;
                 }
                 if (type == 4){
                     System.out.println("Here12");
-                    lives++;
+                    lives[ball.last_hit_by]++;
                 }
                 powerUps.remove(i);
                 i--;
@@ -380,6 +456,53 @@ public class Board extends JPanel implements Runnable {
         System.out.println(id);
         paddleArray[id].setPaddleSpeed(speed);
         paddleArray[id].setPaddleVelocity(velocity_x,velocity_y);
+    }
+
+    void setSET_KEY_LISTENER_ON(int set_key_listener_on){
+        SET_KEY_LISTENER_ON = set_key_listener_on+1;
+    }
+
+    Ball getball(){
+        return ball;
+    }
+
+    public void setMyid(int id){
+        myid = id;
+    }
+
+    public int getMyid(){
+        return myid;
+    }
+
+    public void setDifficult(int level){
+        difficult = level;
+    }
+
+    public int getDifficult(){
+        return difficult;
+    }
+
+    public void setNumber_of_players(int players){
+        this.number_of_players = players;
+    }
+
+    public int getNumber_of_players(){
+        return number_of_players;
+    }
+
+    public void add_bot(int id){
+        Bot[] new_array  = new Bot[botarray.length+1];
+        for (int i=0;i<botarray.length;i++){
+            new_array[i] = botarray[i];
+        }
+        new_array[botarray.length] = new Bot(ball,difficult);
+        new_array[botarray.length].attach(paddleArray[id]);
+        botarray = new_array;
+
+    }
+
+    public void reduce_lives(int id){
+        lives[id] = lives[id]-1;
     }
 
     ///////////////Code for updating game state ends////////////////
