@@ -9,10 +9,12 @@ import java.awt.event.KeyEvent;
 public class Paddle extends Sprite implements Commons {
 
     protected Vector2D paddleVelocity;
-    Vector2D normal;
+    protected Vector2D normal;
     protected int paddleID;
     protected int score;
-    //move_x = true means paddle can movel only in x direction
+    private int radius = 35;
+
+    //move_x = true means paddle can move only in x direction
     protected boolean move_x, move_y;
     /*Paddle ID 1 is at the  top edge
     Paddle ID 2 is at the right edge
@@ -20,7 +22,17 @@ public class Paddle extends Sprite implements Commons {
     Paddle ID 4 is at the bottom edge
     */
     protected int paddleSpeed;
-    public Paddle(int paddleID){
+    private int type;
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public Paddle(int paddleID, int type){
 
 
         paddleVelocity = new Vector2D();
@@ -31,17 +43,31 @@ public class Paddle extends Sprite implements Commons {
         this.paddleID = paddleID;
         move_x = false;
         move_y = false;
+        this.type = type;
         resetState();
 
 
         width = image.getWidth(null);
         height = image.getHeight(null);
+        radius = Math.max(width,height)/2;
         paddleSpeed = 4;
+
 
     }
     public void draw(Graphics2D g2d){
-        g2d.drawImage(this.getImage(), this.getX(), this.getY(),
-                this.getWidth(), this.getHeight(), null);
+        if(type == 1){
+            g2d.drawImage(this.getImage(), this.getX(), this.getY(),
+            this.getWidth(), this.getHeight(), null);
+        }
+        if(type == 2){
+
+            g2d.setColor(Color.cyan);
+            g2d.setStroke(new BasicStroke(3));
+            g2d.drawOval(this.getX(),this.getY()-radius ,2*radius,2*radius);
+            g2d.setStroke(new BasicStroke(1));
+        }
+
+
     }
 
     public void movePaddle(){
@@ -184,6 +210,10 @@ public class Paddle extends Sprite implements Commons {
     public void setPaddleVelocity(int x,int y){
         paddleVelocity.X = x;
         paddleVelocity.Y = y;
+    }
+
+    public Vector2D getCenter(){
+        return new Vector2D(position.X + radius, position.Y + radius);
     }
 
 }

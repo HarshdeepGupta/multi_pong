@@ -17,6 +17,7 @@ public class Board extends JPanel implements Runnable {
     private Paddle[] paddleArray;
     private Ball ball;
     private Bot bot;
+
     private boolean running;
     private int lives;
 
@@ -27,6 +28,7 @@ public class Board extends JPanel implements Runnable {
     private int waitDelay = 1000 ;
 
     //public static ArrayList<powerUp> powerUps;
+
 
     private int SET_KEY_LISTENER_ON;
 
@@ -57,14 +59,17 @@ public class Board extends JPanel implements Runnable {
         setDoubleBuffered(true);
         paddleArray = new Paddle[NO_OF_PADDLES];
         for (int i = 0;i<NO_OF_PADDLES;i++){
-            paddleArray[i] = new Paddle(i+1);
+            paddleArray[i] = new Paddle(i+1,2);
         }
+
 
         ball = new Ball();
 
         //Initialize the bot and attach it to a paddle
         bot = new Bot(ball,1);
+
         bot.attach(paddleArray[0]);
+//        bot1.attach(paddleArray[2]);
     }
 
 
@@ -80,19 +85,24 @@ public class Board extends JPanel implements Runnable {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2d;
+        g2d = (Graphics2D) g;
 
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
-                RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+        g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        Toolkit.getDefaultToolkit().sync();
 
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         drawGameObjects(g2d);
-        Toolkit.getDefaultToolkit().sync();
+
     }
 
 
@@ -246,6 +256,7 @@ public class Board extends JPanel implements Runnable {
                 repaint();
 //            System.out.println("Here");
 
+
                 timeDiff = System.currentTimeMillis() - beforeTime;
                 sleep = DELAY - timeDiff;
 
@@ -270,24 +281,46 @@ public class Board extends JPanel implements Runnable {
         Paddle paddle;
         for (int i = 0; i < NO_OF_PADDLES;i++){
             paddle = paddleArray[i];
-            if(ball.getSquare().intersects(paddle.getRect())){
-                if(ball.ballVelocity.dot(paddle.normal) > 0){
-//                    int vel_X = ball.ballVelocity.X;
-//                    int vel_Y = ball.ballVelocity.Y;
-//                    vel_X = vel_X - 2*(ball.ballVelocity.dot(paddle.normal));
-//                    vel_Y = vel_Y - 2*(ball.ballVelocity.dot(paddle.normal));
-//                    ball.ballVelocity.X = vel_X;
-//                    ball.ballVelocity.Y = vel_Y;
-                    Vector2D vel = ball.ballVelocity;
-                    vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
-                    ball.ballVelocity = vel;
-                    ball.ballVelocity.add(paddle.paddleVelocity);
-                    //also update the last_hit_by
-                    ball.last_hit_by = paddle.paddleID;
-                    System.out.print(ball.last_hit_by);
 
+            if(paddle.getType() == 1){
+                //Collision detection for rectangular paddle
+                if(ball.getRect().intersects(paddle.getRect())){
+                    if(ball.ballVelocity.dot(paddle.normal) > 0){
+
+                        Vector2D vel = ball.ballVelocity;
+                        vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
+                        ball.ballVelocity = vel;
+                        ball.ballVelocity.add(paddle.paddleVelocity);
+                        //also update the last_hit_by
+                        ball.last_hit_by = paddle.paddleID;
+                        System.out.print(ball.last_hit_by);
+
+                    }
                 }
             }
+            //Collision detection for circular paddle
+            else if (paddle.getType() == 2){
+                //Collision detection for circular paddle
+                //Get the centers of the ball and the circular paddle
+                Vector2D c1 = ball.getCenter();
+                Vector2D c2 = paddle.getCenter();
+                int r1 = ball.getRadius();
+                int r2 = ball.getRadius();
+                //Compute the distance between the centers
+                double dist = c1.dist(c2);
+//                System.out.println(Math.abs( dist - (r1+r2)) );
+                //if collision happens, then get the components of velocity along the normal and the tangent
+                if(Math.abs( dist - (r1+r2)) <= 2){
+                    System.out.println("Collsion detected");
+                    //for this, get the normal of the paddle at the point of collision
+                    //the normal is along the line joining the centers of the two circles
+
+                }
+
+
+
+            }
+
 
         }
 
