@@ -9,10 +9,11 @@ import static javax.swing.SpringLayout.HEIGHT;
 public class powerUp extends Sprite implements Commons{
 
     //Fields
-    private double x;
-    private double y;
+    private int x;
+    private int y;
     private int r;
     private Color color1;
+    private long startTime;
 
     private int type;
     // Types of PowerUp
@@ -22,29 +23,33 @@ public class powerUp extends Sprite implements Commons{
     // 4 -----  slow region activated
 
     //Constructor
-    public powerUp(int type, double x, double y) {
+    public powerUp(int type, int x, int y, long start) {
 
         this.x = x;
         this.y = y;
         this.type = type;
         position = new Vector2D();
-
+        setX(x);
+        setY(y);
+        r = 0;
+        startTime = start;
         if (type == 1) {
-            color1 = Color.WHITE;
-            r = 7;
+            color1 = Color.GRAY;
+            r = 5;
         }
         if (type == 2) {
-            color1 = Color.YELLOW;
+            color1 = Color.WHITE;
             r = 5;
         }
         if (type == 3) {
-            color1 = Color.YELLOW;
+            color1 = Color.RED;
             r = 5;
         }
-        if (type == 1) {
-            color1 = Color.YELLOW;
+        if (type == 4) {
+            color1 = Color.PINK;
             r = 5;
         }
+
 
 
     }
@@ -53,11 +58,13 @@ public class powerUp extends Sprite implements Commons{
     public double getx() {return x;}
     public double gety() {return y;}
     public double getr() {return r;}
+    public long getstarttime() {return startTime;}
 
     public int gettype() {return type;}
 
     public boolean update(){
 
+        //y += 2;
         if (y > HEIGHT + r){
             return true;
         }
