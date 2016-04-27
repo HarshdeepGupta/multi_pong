@@ -7,9 +7,9 @@ public class Bot {
     Ball ball;
     int difficulty;
 
+
+
     public Bot( Ball ball, int difficulty) {
-
-
         this.ball = ball;
         this.difficulty = difficulty*100;
     }
@@ -17,6 +17,7 @@ public class Bot {
     void attach(Paddle paddle){
         if(paddle != null){
             this.paddle = paddle;
+            paddle.setIsbot(true);
         }
         else{
             System.out.println("Cannot attach bot to null paddle");
@@ -51,6 +52,16 @@ public class Bot {
             paddle.setPaddleVelocity(0,0);
         }
     }
+
+    public boolean is_attached(){
+        if(paddle==null){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
 
 
 }

@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
 import javax.swing.JPanel;
 
 public class Board extends JPanel implements Runnable {
@@ -13,18 +14,18 @@ public class Board extends JPanel implements Runnable {
     private Paddle[] paddleArray;
     private Ball ball;
     private Bot bot;
-
+    private int myid;
     private int SET_KEY_LISTENER_ON;
+    AffineTransform at = new AffineTransform();
 
 
-
-    public Board(){
-        initBoard();
+    public Board(int id){
+        initBoard(id);
     }
 
-    private void initBoard() {
+    private void initBoard(int id) {
         setBackground(Color.BLACK);
-
+        myid = id;
         /*Paddle ID 1 is at the  top edge
         Paddle ID 2 is at the right edge
         Paddle ID 3 is at the  left edge
@@ -45,7 +46,23 @@ public class Board extends JPanel implements Runnable {
 
         //Initialize the bot and attach it to a paddle
         bot = new Bot(ball,1);
-        bot.attach(paddleArray[0]);
+        //bot.attach(paddleArray[0]);
+        switch (myid){
+            case 0:
+                at.rotate(0);
+                break;
+            case 1:
+                at.rotate(Math.PI);
+                break;
+            case 2:
+                at.rotate(Math.PI/2);
+                break;
+            case 3:
+                at.rotate((3*Math.PI)/2);
+                break;
+            default:
+
+        }
     }
 
 
@@ -69,8 +86,13 @@ public class Board extends JPanel implements Runnable {
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
                 RenderingHints.VALUE_RENDER_QUALITY);
 
+
+        g2d.setTransform(at);
         drawGameObjects(g2d);
         Toolkit.getDefaultToolkit().sync();
+
+
+
     }
 
 
@@ -130,9 +152,10 @@ public class Board extends JPanel implements Runnable {
             movePaddles();
             ball.moveBall();
             checkCollision();
-            bot.updateBot();
+            if(bot.is_attached()) {
+                bot.updateBot();
+            }
             repaint();
-//            System.out.println("Here");
 
             timeDiff = System.currentTimeMillis() - beforeTime;
             sleep = DELAY - timeDiff;
@@ -166,7 +189,7 @@ public class Board extends JPanel implements Runnable {
 //                    ball.ballVelocity.X = vel_X;
 //                    ball.ballVelocity.Y = vel_Y;
                     Vector2D vel = ball.ballVelocity;
-                    vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
+                    vel = vel.sub( paddle.normal.scalarMult(2*(vel.dot(paddle.normal))));
                     ball.ballVelocity = vel;
                     ball.ballVelocity.add(paddle.paddleVelocity);
                     //also update the last_hit_by
@@ -197,6 +220,26 @@ public class Board extends JPanel implements Runnable {
         System.out.println(id);
         paddleArray[id].setPaddleSpeed(speed);
         paddleArray[id].setPaddleVelocity(velocity_x,velocity_y);
+    }
+
+    void setSET_KEY_LISTENER_ON(int set_key_listener_on){
+        SET_KEY_LISTENER_ON = set_key_listener_on+1;
+    }
+
+    Ball getball(){
+        return ball;
+    }
+
+    Bot getBot(){
+        return bot;
+    }
+
+    public void setMyid(int id){
+        myid = id;
+    }
+
+    public int getMyid(){
+        return myid;
     }
 
     ///////////////Code for updating game state ends////////////////
