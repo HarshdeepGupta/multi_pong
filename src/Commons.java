@@ -5,7 +5,7 @@
 public interface Commons {
 
     public static final int WIDTH = 500;
-    public static final int HEIGTH = 500;
+    public static final int HEIGHT = 500;
     public static final int BOTTOM_EDGE = 390;
     public static final int N_OF_BRICKS = 30;
     public static final int INIT_PADDLE1_X = 250;

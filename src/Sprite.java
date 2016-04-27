@@ -53,5 +53,9 @@ public class Sprite {
                 image.getWidth(null), image.getHeight(null));
     }
 
+    Rectangle getSquare() {
+        return new Rectangle(position.X, position.Y, 10, 10);
+    }
+
 
 }

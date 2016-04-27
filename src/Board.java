@@ -2,6 +2,8 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import javax.swing.JPanel;
 
 public class Board extends JPanel implements Runnable {
@@ -9,23 +11,50 @@ public class Board extends JPanel implements Runnable {
 
     private final int DELAY = 25;
     private final int NO_OF_PADDLES = 4;
+//    private static int HEIGHT = 575;
+//    private static int WIDTH = 920;
 
     private Thread animator;
     private Paddle[] paddleArray;
     private Ball ball;
-    private Bot bot;
+    private Bot[] bot_array_multi;
+    private Bot[] botarray;
     private int myid;
+    private boolean running;
+    private int[] lives = new int[4];
+
+
+    private long waitTimer;
+    private long waitTimerDiff;
+    private boolean wait;
+    private int waitDelay = 1000 ;
+    private boolean single_player;
+    private int difficult;
+    private int number_of_players;
+    //public static ArrayList<powerUp> powerUps;
+
+
     private int SET_KEY_LISTENER_ON;
     AffineTransform at = new AffineTransform();
 
 
-    public Board(int id){
+    public Board(int id,boolean single_player,int players){
+        this.single_player = single_player;
+        this.number_of_players = players;
         initBoard(id);
     }
 
+
     private void initBoard(int id) {
-        setBackground(Color.BLACK);
+        setBackground(Color.cyan);
         myid = id;
+        setPreferredSize(new Dimension(WIDTH,HEIGHT));
+        setFocusable(true);
+        requestFocus();
+
+        difficult=1;
+        //powerUps = new ArrayList<powerUp>();
+
         /*Paddle ID 1 is at the  top edge
         Paddle ID 2 is at the right edge
         Paddle ID 3 is at the  left edge
@@ -45,24 +74,45 @@ public class Board extends JPanel implements Runnable {
         ball = new Ball();
 
         //Initialize the bot and attach it to a paddle
-        bot = new Bot(ball,1);
+        //bot = new Bot(ball,1);
         //bot.attach(paddleArray[0]);
         switch (myid){
             case 0:
                 at.rotate(0);
                 break;
             case 1:
-                at.rotate(Math.PI);
+                at.rotate(0);
                 break;
             case 2:
-                at.rotate(Math.PI/2);
+                at.rotate(0);
                 break;
             case 3:
-                at.rotate((3*Math.PI)/2);
+                at.rotate(0);
                 break;
             default:
 
         }
+
+        if(single_player){
+            botarray = new Bot[3];
+            for (int i = 0;i<3;i++){
+                botarray[i] = new Bot(ball,difficult);
+                botarray[i].attach(paddleArray[i+1]);
+            }
+        }
+        else{
+            botarray = new Bot[4-1-number_of_players];
+            for (int i=0;i<botarray.length;i++){
+                botarray[i] = new Bot(ball,difficult);
+                botarray[i].attach(paddleArray[number_of_players+i+1]);
+            }
+        }
+
+        for(int i=0;i<4;i++){
+            lives[i]=3;
+        }
+
+        bot_array_multi = new Bot[3];// To store dynamically created bots on disconnection
     }
 
 
@@ -86,8 +136,13 @@ public class Board extends JPanel implements Runnable {
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
                 RenderingHints.VALUE_RENDER_QUALITY);
 
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         g2d.setTransform(at);
+
+
+
         drawGameObjects(g2d);
         Toolkit.getDefaultToolkit().sync();
 
@@ -102,6 +157,8 @@ public class Board extends JPanel implements Runnable {
 
         drawPaddles(g2d);
         drawBall(g2d);
+        //drawPowerUps(g2d);
+        drawPlayerLives(g2d);
 
     }
 
@@ -115,15 +172,43 @@ public class Board extends JPanel implements Runnable {
         for(int i = 0; i < NO_OF_PADDLES;i++){
             paddle = paddleArray[i];
             paddle.draw(g2d);
-
         }
+
+    }
+
+    private void drawPlayerLives(Graphics2D g2d){
+        for(int i = 0; i < lives[0]; i++){
+            g2d.setColor(Color.WHITE);
+            g2d.fillOval(20 + (20 * i), 450, 10, 10);
+            g2d.setStroke(new BasicStroke(3));
+            g2d.setColor(Color.WHITE.darker());
+            g2d.fillOval(20 + (20 * i), 450, 10, 10);
+            g2d.setStroke(new BasicStroke(1));
+        }
+
+    }
+
+/*    private void drawPowerUps(Graphics2D g2d){
+        for(int i = 0; i < powerUps.size(); i++){
+            powerUps.get(i).draw(g2d);
+        }
+    }*/
+
+    private void drawText(int k, int d){
+        Graphics g2d = this.getGraphics();
+        g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+        String s = " - FACE OFF BEGINS IN FEW" + " SEC - ";
+        int len = (int) g2d.getFontMetrics().getStringBounds(s, g2d).getWidth();
+        int transparency = (int) (255 * Math.sin(3.14 * (waitTimerDiff-d)/waitDelay));
+        if (transparency > 255) transparency = 255;
+        if (transparency < 5 ) transparency = 0;
+        g2d.setColor(new Color(255, 255, 255, transparency));
+        g2d.drawString(s, 250-len/2, 250);
 
     }
     ///////////////Code for drawing game ends/////////////
 
     private class TAdapter extends KeyAdapter {
-
-
 
         @Override
         public void keyReleased(KeyEvent e) {
@@ -142,35 +227,111 @@ public class Board extends JPanel implements Runnable {
     @Override
     public void run() {
 
+        wait = true;
+        waitTimer = 0;
+        waitTimerDiff = 0;
+        running = true;
+
+
         long beforeTime, timeDiff, sleep;
 
-        beforeTime = System.currentTimeMillis();
+        while (running) {
 
-        while (true) {
-
-
-            movePaddles();
-            ball.moveBall();
-            checkCollision();
-            if(bot.is_attached()) {
-                bot.updateBot();
+            if (waitTimer == 0 && wait){
+                wait = false;
+                System.out.println(2);
+                waitTimer = System.currentTimeMillis();
             }
-            repaint();
+            else {
 
-            timeDiff = System.currentTimeMillis() - beforeTime;
-            sleep = DELAY - timeDiff;
+                waitTimerDiff = System.currentTimeMillis() - waitTimer;
+                if (waitTimerDiff < waitDelay){
+                    drawText(3,0);
+                }
+                else if (waitTimerDiff > waitDelay && waitTimerDiff < 2 * waitDelay){
+                    //System.out.println(89);
+                    drawText(2,waitDelay);
+                }
+                else if (waitTimerDiff > 2 * waitDelay && waitTimerDiff < 3 * waitDelay){
+                    drawText(1,2*waitDelay);
+                }
 
-            if (sleep < 0) {
-                sleep = 2;
+                else {
+                    wait = true;
+                    waitTimerDiff = 0;
+                }
             }
 
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted: " + e.getMessage());
+            //movePaddles();
+            //ball.moveBall();
+            //checkCollision();
+
+            //repaint();
+
+            if (wait){
+                beforeTime = System.currentTimeMillis();
+                movePaddles();
+                ball.moveBall();
+                checkCollision();
+
+                /*//chance for power ups
+                double rand = Math.random();
+                if (rand < .001) {
+                    System.out.println("Here1");
+                    powerUps.add(new powerUp(1, Math.abs(ball.getX()), Math.abs(ball.getY())));
+                }
+                else if (rand < 0.002) {
+                    System.out.println("Here2");
+                    powerUps.add(new powerUp(2, Math.abs(ball.getX()), Math.abs(ball.getY())));
+                }
+                else if (rand < 0.003) {
+                    System.out.println("Here3");
+                    powerUps.add(new powerUp(3, Math.abs(ball.getX()), Math.abs(ball.getY())));
+                }
+                else if (rand < 0.004) {
+                    System.out.println("Here4");
+                    powerUps.add(new powerUp(4, Math.abs(ball.getX()-300), Math.abs(ball.getY()-300)));
+                }
+*/
+                if(single_player) {
+                    for(int i=0;i<3;i++)
+                        if (botarray[i].is_attached()) {
+                            botarray[i].updateBot();
+                        }
+                }
+                else{
+                    for(int i=0;i<botarray.length;i++)
+                        if (botarray[i].is_attached()) {
+                            botarray[i].updateBot();
+                        }
+                }
+/*                //update power ups
+                for(int i = 0; i < powerUps.size(); i++){
+                    boolean remove = powerUps.get(i).update();
+                    if (remove){
+                        powerUps.remove(i);
+                        i--;
+                    }
+                }*/
+
+                repaint();
+//            System.out.println("Here");
+
+                timeDiff = System.currentTimeMillis() - beforeTime;
+                sleep = DELAY - timeDiff;
+
+                if (sleep < 0) {
+                    sleep = 2;
+                }
+
+                try {
+                    Thread.sleep(sleep);
+                } catch (InterruptedException e) {
+                    System.out.println("Interrupted: " + e.getMessage());
+                }
+
             }
 
-            beforeTime = System.currentTimeMillis();
         }
     }
 
@@ -180,7 +341,7 @@ public class Board extends JPanel implements Runnable {
         Paddle paddle;
         for (int i = 0; i < NO_OF_PADDLES;i++){
             paddle = paddleArray[i];
-            if(ball.getRect().intersects(paddle.getRect())){
+            if(ball.getSquare().intersects(paddle.getRect())){
                 if(ball.ballVelocity.dot(paddle.normal) > 0){
 //                    int vel_X = ball.ballVelocity.X;
 //                    int vel_Y = ball.ballVelocity.Y;
@@ -200,6 +361,43 @@ public class Board extends JPanel implements Runnable {
             }
 
         }
+
+        /*//power-up ball collision
+        int px = ball.getX();
+        int py = ball.getY();
+        int pr  = 10;
+        for (int i = 0; i < powerUps.size(); i++){
+            powerUp p = powerUps.get(i);
+            double x = p.getx();
+            double y = p.gety();
+            double r = p.getr();
+            double dx = px - x;
+            double dy = py - y;
+            double dist = Math.sqrt(dx * dx + dy * dy);
+
+            //collected power-up
+            if (dist < px + r){
+                int type = p.gettype();
+                if (type == 1){
+                    lives++;
+                    lives--;
+                }
+                if (type == 2){
+                    lives++;
+                    lives--;
+                }
+                if (type == 3){
+                    lives++;
+                    lives--;
+                }
+                if (type == 4){
+                    lives++;
+                }
+            }
+            powerUps.remove(i);
+            i--;
+
+        }*/
 
     }
 
@@ -230,16 +428,43 @@ public class Board extends JPanel implements Runnable {
         return ball;
     }
 
-    Bot getBot(){
-        return bot;
-    }
-
     public void setMyid(int id){
         myid = id;
     }
 
     public int getMyid(){
         return myid;
+    }
+
+    public void setDifficult(int level){
+        difficult = level;
+    }
+
+    public int getDifficult(){
+        return difficult;
+    }
+
+    public void setNumber_of_players(int players){
+        this.number_of_players = players;
+    }
+
+    public int getNumber_of_players(){
+        return number_of_players;
+    }
+
+    public void add_bot(int id){
+        Bot[] new_array  = new Bot[botarray.length+1];
+        for (int i=0;i<botarray.length;i++){
+            new_array[i] = botarray[i];
+        }
+        new_array[botarray.length] = new Bot(ball,difficult);
+        new_array[botarray.length].attach(paddleArray[id]);
+        botarray = new_array;
+
+    }
+
+    public void reduce_lives(int id){
+        lives[id] = lives[id]-1;
     }
 
     ///////////////Code for updating game state ends////////////////

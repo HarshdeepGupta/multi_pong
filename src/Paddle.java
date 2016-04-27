@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 /**
  * Created by hd on 14/4/16.
  */
+
 public class Paddle extends Sprite implements Commons {
 
     protected Vector2D paddleVelocity;
@@ -65,8 +66,8 @@ public class Paddle extends Sprite implements Commons {
                 Y = 0;
             }
 
-            if (Y >= HEIGTH-height) {
-                Y = HEIGTH-height;
+            if (Y >= HEIGHT-height) {
+                Y = HEIGHT-height;
             }
             position.Y = Y;
         }
