@@ -28,6 +28,8 @@ public class Board extends JPanel implements Runnable {
     private long waitTimerDiff;
     private boolean wait;
     private int waitDelay = 1000 ;
+    public static ArrayList<powerUp> powerUps;
+    public static ArrayList<powerUp> powerCollect;
     private boolean single_player;
     private int difficult;
     private int number_of_players;
@@ -51,9 +53,10 @@ public class Board extends JPanel implements Runnable {
         setPreferredSize(new Dimension(WIDTH,HEIGHT));
         setFocusable(true);
         requestFocus();
+        powerUps = new ArrayList<powerUp>();
+        powerCollect = new ArrayList<powerUp>();
 
         difficult=1;
-        //powerUps = new ArrayList<powerUp>();
 
         /*Paddle ID 1 is at the  top edge
         Paddle ID 2 is at the right edge
@@ -157,7 +160,7 @@ public class Board extends JPanel implements Runnable {
 
         drawPaddles(g2d);
         drawBall(g2d);
-        //drawPowerUps(g2d);
+        drawPowerUps(g2d);
         drawPlayerLives(g2d);
 
     }
@@ -188,11 +191,11 @@ public class Board extends JPanel implements Runnable {
 
     }
 
-/*    private void drawPowerUps(Graphics2D g2d){
+    private void drawPowerUps(Graphics2D g2d){
         for(int i = 0; i < powerUps.size(); i++){
             powerUps.get(i).draw(g2d);
         }
-    }*/
+    }
 
     private void drawText(int k, int d){
         Graphics g2d = this.getGraphics();
@@ -273,25 +276,30 @@ public class Board extends JPanel implements Runnable {
                 movePaddles();
                 ball.moveBall();
                 checkCollision();
+                updatePowerUp();
+                updatePowerCollect();
 
-                /*//chance for power ups
+                //chance for power ups
                 double rand = Math.random();
                 if (rand < .001) {
                     System.out.println("Here1");
-                    powerUps.add(new powerUp(1, Math.abs(ball.getX()), Math.abs(ball.getY())));
+                    powerUps.add(new powerUp(4, Math.abs(ball.getX() - 20), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
                 else if (rand < 0.002) {
                     System.out.println("Here2");
-                    powerUps.add(new powerUp(2, Math.abs(ball.getX()), Math.abs(ball.getY())));
+                    powerUps.add(new powerUp(3, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 20), System.currentTimeMillis()));
                 }
                 else if (rand < 0.003) {
                     System.out.println("Here3");
-                    powerUps.add(new powerUp(3, Math.abs(ball.getX()), Math.abs(ball.getY())));
+                    powerUps.add(new powerUp(2, Math.abs(ball.getX() - 20), Math.abs(ball.getY() - 20), System.currentTimeMillis()));
                 }
                 else if (rand < 0.004) {
                     System.out.println("Here4");
-                    powerUps.add(new powerUp(4, Math.abs(ball.getX()-300), Math.abs(ball.getY()-300)));
+                    powerUps.add(new powerUp(1, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
+
+/*                //update power ups
+=======
 */
                 if(single_player) {
                     for(int i=0;i<3;i++)
@@ -305,14 +313,14 @@ public class Board extends JPanel implements Runnable {
                             botarray[i].updateBot();
                         }
                 }
-/*                //update power ups
+               //update power ups
                 for(int i = 0; i < powerUps.size(); i++){
                     boolean remove = powerUps.get(i).update();
                     if (remove){
                         powerUps.remove(i);
                         i--;
                     }
-                }*/
+                }
 
                 repaint();
 //            System.out.println("Here");
@@ -362,9 +370,10 @@ public class Board extends JPanel implements Runnable {
 
         }
 
-        /*//power-up ball collision
-        int px = ball.getX();
-        int py = ball.getY();
+        //power-up ball collision
+        int px = ball.position.X;
+        int py = ball.position.Y;
+        //System
         int pr  = 10;
         for (int i = 0; i < powerUps.size(); i++){
             powerUp p = powerUps.get(i);
@@ -374,34 +383,63 @@ public class Board extends JPanel implements Runnable {
             double dx = px - x;
             double dy = py - y;
             double dist = Math.sqrt(dx * dx + dy * dy);
-
             //collected power-up
-            if (dist < px + r){
+            if (dist < pr + r){
                 int type = p.gettype();
                 if (type == 1){
-                    lives++;
-                    lives--;
+                    System.out.println("Here9");
+                    lives[ball.last_hit_by]++;
                 }
                 if (type == 2){
-                    lives++;
-                    lives--;
+                    System.out.println("Here10");
+                    long powerEffect = System.currentTimeMillis();
+                    powerCollect.add(new powerUp(2, p.getX(), p.getY(), powerEffect));
+                    //code for freezing paddle i
                 }
                 if (type == 3){
-                    lives++;
-                    lives--;
+                    System.out.println("Here11");
+                    lives[ball.last_hit_by]++;
                 }
                 if (type == 4){
-                    lives++;
+                    System.out.println("Here12");
+                    lives[ball.last_hit_by]++;
                 }
+                powerUps.remove(i);
+                i--;
             }
-            powerUps.remove(i);
-            i--;
 
-        }*/
+        }
 
     }
 
+    private void updatePowerUp(){
+        long powerTime, powerDiff, powerDelay;
+        powerDelay = 10000;
+        for (int i = 0; i < powerUps.size(); i++){
+            powerTime = powerUps.get(i).getstarttime();
+            //powerDiff = 0
+            powerDiff = System.currentTimeMillis() - powerTime;
+            if(powerDiff > powerDelay) {
+                powerUps.remove(i);
+                i--;
+            }
+        }
+    }
 
+    private void updatePowerCollect(){
+        long powerTime, powerDiff, powerDelay;
+        powerDelay = 5000;
+        for (int i = 0; i < powerCollect.size(); i++){
+            powerTime = powerCollect.get(i).getstarttime();
+            //powerDiff = 0
+            powerDiff = System.currentTimeMillis() - powerTime;
+            if(powerDiff > powerDelay) {
+                powerCollect.remove(i);
+                i--;
+            }
+        }
+
+    }
 
     private void movePaddles() {
         for(int i = 0; i < NO_OF_PADDLES;i++){
