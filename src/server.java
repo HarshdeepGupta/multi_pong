@@ -14,7 +14,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.io.*;
 
-public class server extends gui{
+public class server extends gui implements Commons{
 
 
     static boolean game_start = false;
@@ -222,8 +222,10 @@ public class server extends gui{
             jf.setVisible(false);
             JFrame new_frame= new JFrame();
             new_frame.add(board);
+            new_frame.getContentPane().setPreferredSize(new Dimension(Commons.WIDTH,
+                    Commons.HEIGHT));
             new_frame.pack();
-            new_frame.setSize(500,520);
+//            new_frame.setSize(Commons.WIDTH,Commons.HEIGHT);
             new_frame.setLocationRelativeTo(null);
             new_frame.setResizable(false);
             new_frame.setVisible(true);
@@ -487,10 +489,13 @@ public class server extends gui{
                                 board = new Board(myid,single_player,number_of_players);
                                 jf.setVisible(false);
                                 JFrame new_frame= new JFrame();
+
                                 new_frame.setTitle("Multipong");
+                                new_frame.getContentPane().setPreferredSize(new Dimension(Commons.WIDTH,
+                                        Commons.HEIGHT));
                                 new_frame.add(board);
                                 new_frame.pack();
-                                new_frame.setSize(500,520);
+//                                new_frame.setSize(Commons.WIDTH,Commons.HEIGHT);
                                 new_frame.setLocationRelativeTo(null);
                                 new_frame.setResizable(false);
                                 new_frame.setVisible(true);

@@ -3,16 +3,15 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 
-public class Board extends JPanel implements Runnable {
+public class Board extends JPanel implements Runnable{
 
 
     private final int DELAY = 25;
     private final int NO_OF_PADDLES = 4;
-//    private static int HEIGHT = 575;
-//    private static int WIDTH = 920;
 
     private Thread animator;
     private Paddle[] paddleArray;
@@ -50,9 +49,10 @@ public class Board extends JPanel implements Runnable {
 
 
     private void initBoard(int id) {
-        setBackground(Color.cyan);
+        setBackground(Color.DARK_GRAY);
         myid = id;
-        setPreferredSize(new Dimension(WIDTH,HEIGHT));
+
+//        setSize(new Dimension(WIDTH,HEIGHT));
         setFocusable(true);
         requestFocus();
         powerUps = new ArrayList<powerUp>();
@@ -143,7 +143,7 @@ public class Board extends JPanel implements Runnable {
         g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
         g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         Toolkit.getDefaultToolkit().sync();
@@ -151,7 +151,7 @@ public class Board extends JPanel implements Runnable {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        g2d.setTransform(at);
+//        g2d.rotate(-Math.PI / 2, getWidth()/2, getHeight()/2);
 
 
 
@@ -281,11 +281,12 @@ public class Board extends JPanel implements Runnable {
 
             if (wait){
                 beforeTime = System.currentTimeMillis();
-                movePaddles();
-                ball.moveBall();
                 checkCollision();
                 updatePowerUp();
                 updatePowerCollect();
+                ball.moveBall();
+                movePaddles();
+
 
                 //chance for power ups
                 double rand = Math.random();
@@ -306,9 +307,6 @@ public class Board extends JPanel implements Runnable {
                     powerUps.add(new powerUp(1, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
 
-/*                //update power ups
-=======
-*/
                 if(single_player) {
                     for(int i=0;i<3;i++)
                         if (botarray[i].is_attached()) {
@@ -331,9 +329,6 @@ public class Board extends JPanel implements Runnable {
                 }
 
                 repaint();
-//            System.out.println("Here");
-
-
                 timeDiff = System.currentTimeMillis() - beforeTime;
                 sleep = DELAY - timeDiff;
 
@@ -394,16 +389,12 @@ public class Board extends JPanel implements Runnable {
                     //the normal is along the line joining the centers of the two circles
 
                 }
-
-
-
             }
 
-            System.out.println(ball.wall_hit);
 
             //detect collision of ball with board walls
             if( ball.wall_hit == 1 ){
-                System.out.println(ball.wall_hit);
+
             }
             if(ball.wall_hit == 2) {
 
@@ -414,9 +405,6 @@ public class Board extends JPanel implements Runnable {
             if(ball.wall_hit == 4){
 
             }
-
-
-
         }
 
         //power-up ball collision
@@ -433,11 +421,11 @@ public class Board extends JPanel implements Runnable {
             double dy = py - y;
             double dist = Math.sqrt(dx * dx + dy * dy);
             //collected power-up
-            if (dist < pr + r){
+            if (dist < pr + r && ball.last_hit_by>0){
                 int type = p.gettype();
                 if (type == 1){
                     System.out.println("Here9");
-                    lives[ball.last_hit_by]++;
+                    lives[ball.last_hit_by-1]++;
                 }
                 if (type == 2){
                     System.out.println("Here10");
@@ -447,11 +435,11 @@ public class Board extends JPanel implements Runnable {
                 }
                 if (type == 3){
                     System.out.println("Here11");
-                    lives[ball.last_hit_by]++;
+                    lives[ball.last_hit_by-1]++;
                 }
                 if (type == 4){
                     System.out.println("Here12");
-                    lives[ball.last_hit_by]++;
+                    lives[ball.last_hit_by-1]++;
                 }
                 powerUps.remove(i);
                 i--;
