@@ -153,7 +153,23 @@ public class Board extends JPanel implements Runnable{
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-//        g2d.rotate(-Math.PI / 2, getWidth()/2, getHeight()/2);
+        switch (myid){
+            case 0:
+                g2d.rotate(0, getWidth()/2, getHeight()/2);
+                break;
+            case 1:
+                g2d.rotate(Math.PI, getWidth()/2, getHeight()/2);
+                break;
+            case 2:
+                g2d.rotate((3*Math.PI )/ 2, getWidth()/2, getHeight()/2);
+                break;
+            case 3:
+                g2d.rotate(Math.PI / 2, getWidth()/2, getHeight()/2);
+                break;
+            default:
+
+        }
+
 
 
 

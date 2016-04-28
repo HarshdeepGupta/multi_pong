@@ -31,8 +31,8 @@ public class server extends gui implements Commons{
 
     int myid=0;// global player_id in the game
     //String my_ip = InetAddress.getLocalHost().getHostAddress().toString();
-    String my_ip = "192.168.0.100";
-    int my_port = 4456;
+    String my_ip = "192.168.43.221";
+    int my_port;
 
     int number_of_players=0;
 
@@ -68,11 +68,33 @@ public class server extends gui implements Commons{
         bHandler1 = new ButtonHandler1();
         sendButton.addActionListener (bHandler);
         connect.addActionListener(bHandler1);
-        socket1 = new DatagramSocket (my_port);
+        socket1 = new DatagramSocket ();
+        my_port = socket1.getLocalPort();
+        System.out.println(my_port);
         txArea.setText(info);
         rxArea.setText(info);
         jf = this;
         container1 = this;
+        for (int i=0;i<4;i++){
+            ip_array[i] = "";
+        }
+        for (int i=0;i<4;i++){
+            port_array[i] = 0;
+        }
+        for (int i=0;i<4;i++){
+            last_connected[i]=0;
+        }
+        for (int i=0;i<4;i++){
+            id_exchange_connection[i]=false;
+        }
+        for (int i=0;i<4;i++){
+            start_connection[i]=false;
+        }
+        for(int i=0;i<4;i++){
+            time_array_score[i] = 0;
+        }
+        difficult=1;
+        bot_array_multi = new Bot[3];
         initUI();
     }
 
@@ -88,8 +110,8 @@ public class server extends gui implements Commons{
         bHandler1 = new ButtonHandler1();
         sendButton.addActionListener (bHandler);
         connect.addActionListener(bHandler1);
-        socket1 = new DatagramSocket (my_port);
-
+        socket1 = new DatagramSocket ();
+        my_port = socket1.getLocalPort();
         container1 = this;
         for (int i=0;i<4;i++){
             ip_array[i] = "";

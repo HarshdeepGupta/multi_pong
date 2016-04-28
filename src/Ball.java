@@ -68,7 +68,7 @@ public class Ball extends Sprite implements Commons {
     }
 
     public void moveBall() {
-
+        //System.out.println("ball moving");
         int X = position.X;
         int Y = position.Y;
         X += ballVelocity.X;
@@ -188,6 +188,9 @@ public class Ball extends Sprite implements Commons {
                 buf = my_id.getBytes();// here we want our ip-address instead
                 System.out.println("sent".concat(my_id));
                 for (int i = 0; i <= number_of_players; i++) {
+                    System.out.println(i);
+                    System.out.println(ip_array[i]);
+                    System.out.println(port_array[i]);
                     InetAddress address = InetAddress.getByName(ip_array[i]);
                     DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
                     socket1.send(packet);
