@@ -19,8 +19,9 @@ public class powerUp extends Sprite implements Commons{
     // Types of PowerUp
     // 1 -----  +1 life
     // 2 -----  freeze
-    // 3 -----  fast region activated
-    // 4 -----  slow region activated
+    // 3 -----  longer paddle
+    // 4 -----  faster paddle
+    // 5 -----  ball direction change
 
     //Constructor
     public powerUp(int type, int x, int y, long start) {
@@ -49,7 +50,10 @@ public class powerUp extends Sprite implements Commons{
             color1 = Color.PINK;
             r = 5;
         }
-
+        if (type == 5) {
+            color1 = Color.BLUE;
+            r = 5;
+        }
 
 
     }

@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
 import java.awt.image.ImageObserver;
 import java.util.ArrayList;
+import java.util.Map;
 import javax.swing.JPanel;
 
 public class Board extends JPanel implements Runnable{
@@ -24,7 +25,16 @@ public class Board extends JPanel implements Runnable{
     private int myid;
 
     private boolean running;
-    private int[] lives = new int[4];
+    private int[] specialPaddle = new int[5];
+    private boolean freeze;
+    private boolean elongate = false;
+    private boolean fastPaddleOver = true;
+    private boolean fastPaddle = false;
+    private boolean live = false;
+    private boolean dirChange = false;
+    private boolean freezeOver = true;
+    private int[] lives = new int[5];
+    private int[] speed = new int[5];
 
 
     private long waitTimer;
@@ -61,6 +71,7 @@ public class Board extends JPanel implements Runnable{
         powerCollect = new ArrayList<powerUp>();
 
         difficult=1;
+        freeze = false;
 
         /*Paddle ID 1 is at the  top edge
         Paddle ID 2 is at the right edge
@@ -75,7 +86,7 @@ public class Board extends JPanel implements Runnable{
         setDoubleBuffered(true);
         paddleArray = new Paddle[NO_OF_PADDLES];
         for (int i = 0;i<NO_OF_PADDLES;i++){
-            paddleArray[i] = new Paddle(i+1,1);
+            paddleArray[i] = new Paddle(i+1);
         }
 
 
@@ -206,15 +217,49 @@ public class Board extends JPanel implements Runnable{
     }
 
     private void drawPlayerLives(Graphics2D g2d){
-        for(int i = 0; i < lives[0]; i++){
-            g2d.setColor(Color.WHITE);
-            g2d.fillOval(20 + (20 * i), 450, 10, 10);
-            g2d.setStroke(new BasicStroke(3));
-            g2d.setColor(Color.WHITE.darker());
-            g2d.fillOval(20 + (20 * i), 450, 10, 10);
-            g2d.setStroke(new BasicStroke(1));
-        }
+        for (int j = 0; j < 4; j++) {
+            if (j == 0){
+                for(int i = 0; i < lives[j]; i++){
+                    g2d.setColor(Color.WHITE);
+                    g2d.fillOval(20 + (20 * i), 450, 7, 7);
+                    g2d.setStroke(new BasicStroke(3));
+                    g2d.setColor(Color.WHITE.darker());
+                    g2d.fillOval(20 + (20 * i), 450, 7, 7);
+                    g2d.setStroke(new BasicStroke(1));
+                }
+            }
+            if (j == 1) {
+                for(int i = 0; i < lives[j]; i++){
+                    g2d.setColor(Color.WHITE);
+                    g2d.fillOval(400 + (20 * i), 50, 7, 7);
+                    g2d.setStroke(new BasicStroke(3));
+                    g2d.setColor(Color.WHITE.darker());
+                    g2d.fillOval(400 + (20 * i), 50, 7, 7);
+                    g2d.setStroke(new BasicStroke(1));
+                }
+            }
+            if (j == 2) {
+                for(int i = 0; i < lives[j]; i++){
+                    g2d.setColor(Color.WHITE);
+                    g2d.fillOval(450, 400 + (20 * i), 7, 7);
+                    g2d.setStroke(new BasicStroke(3));
+                    g2d.setColor(Color.WHITE.darker());
+                    g2d.fillOval(450, 400 + (20 * i), 7, 7);
+                    g2d.setStroke(new BasicStroke(1));
+                }
+            }
+            if (j == 3) {
+                for(int i = 0; i < lives[j]; i++){
+                    g2d.setColor(Color.WHITE);
+                    g2d.fillOval(50, 20 + (20 * i), 7, 7);
+                    g2d.setStroke(new BasicStroke(3));
+                    g2d.setColor(Color.WHITE.darker());
+                    g2d.fillOval(50, 20 + (20 * i), 7, 7);
+                    g2d.setStroke(new BasicStroke(1));
+                }
+            }
 
+        }
     }
 
     private void drawPowerUps(Graphics2D g2d){
@@ -308,23 +353,36 @@ public class Board extends JPanel implements Runnable{
 
                 //chance for power ups
                 double rand = Math.random();
-                if (rand < .001) {
-
-                    powerUps.add(new powerUp(4, Math.abs(ball.getX() - 20), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
+                double randx = 500*Math.random();
+                int x = ((int) randx);
+//                System.out.println(x);
+                double randy = 500*Math.random();
+                int y = ((int) randy);
+                if (rand < .05 && !fastPaddle) {
+                    System.out.println("Here1");
+                    fastPaddle = true;
+                    powerUps.add(new powerUp(4, x, y, System.currentTimeMillis()));
                 }
-                else if (rand < 0.002) {
-
-                    powerUps.add(new powerUp(3, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 20), System.currentTimeMillis()));
+                else if (rand < 0.01 && !dirChange) {
+                    System.out.println("Here4");
+                    dirChange = true;
+                    powerUps.add(new powerUp(5, x, y, System.currentTimeMillis()));
                 }
-                else if (rand < 0.003) {
-
-                    powerUps.add(new powerUp(2, Math.abs(ball.getX() - 20), Math.abs(ball.getY() - 20), System.currentTimeMillis()));
+                else if (rand < 0.02 && !elongate) {
+                    System.out.println("Here2");
+                    elongate = true;
+                    powerUps.add(new powerUp(3, x, y, System.currentTimeMillis()));
                 }
-                else if (rand < 0.004) {
-
-                    powerUps.add(new powerUp(1, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
+                else if (rand < 0.03 && !freeze) {
+                    System.out.println("Here3");
+                    freeze = true;
+                    powerUps.add(new powerUp(2, x, y, System.currentTimeMillis()));
                 }
-
+                else if (rand < 0.04 && !live) {
+                    System.out.println("Here4");
+                    live = true;
+                    powerUps.add(new powerUp(1, x, y, System.currentTimeMillis()));
+                }
 
                 //update power ups
                 for(int i = 0; i < powerUps.size(); i++){
@@ -366,6 +424,43 @@ public class Board extends JPanel implements Runnable{
 
             }
 
+            /*for (int i = 0; i < 4; i++) {
+                if (lives[i] == 0) {
+                    //drawOutPlayer(i);
+                    wait = true;
+                    waitTimer = 0;
+                    waitTimerDiff = 0;
+                    running = true;
+
+
+                    Graphics g2d = this.getGraphics();
+                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+
+                    //long beforeTime, timeDiff, sleep;
+
+                    while (running) {
+
+                        if (waitTimer == 0 && wait){
+                            wait = false;
+                            System.out.println(2);
+                            waitTimer = System.currentTimeMillis();
+                        }
+                        else {
+
+                            waitTimerDiff = System.currentTimeMillis() - waitTimer;
+                            if (waitTimerDiff < waitDelay){
+                                g2d.drawString("HI, you are out of the game", 200, 250);
+                            }
+                            else {
+                                wait = true;
+                                waitTimerDiff = 0;
+                            }
+                        }
+
+                    }
+                }
+            }*/
+
         }
     }
 
@@ -394,41 +489,41 @@ public class Board extends JPanel implements Runnable{
                     ball.last_hit_by = paddle.paddleID;
                    // System.out.print(ball.last_hit_by);
                    */
-            if(paddle.getType() == 1){
-                //Collision detection for rectangular paddle
-                if(ball.getRect().intersects(paddle.getRect())){
-                    if(ball.ballVelocity.dot(paddle.normal) > 0){
 
-                        Vector2D vel = ball.ballVelocity;
-                        vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
-                        ball.ballVelocity = vel;
-                        ball.ballVelocity.add(paddle.paddleVelocity);
-                        //also update the last_hit_by
-                        ball.last_hit_by = paddle.paddleID;
+            //Collision detection for rectangular paddle
+            if(ball.getRect().intersects(paddle.getRect())){
+                if(ball.ballVelocity.dot(paddle.normal) > 0){
+
+                    Vector2D vel = ball.ballVelocity;
+                    vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
+                    ball.ballVelocity = vel;
+                    ball.ballVelocity.add(paddle.paddleVelocity);
+                    //also update the last_hit_by
+                    ball.last_hit_by = paddle.paddleID;
 //                        System.out.print(ball.last_hit_by);
 
-                    }
                 }
             }
-            //Collision detection for circular paddle
-            else if (paddle.getType() == 2){
-                //Collision detection for circular paddle
-                //Get the centers of the ball and the circular paddle
-                Vector2D c1 = ball.getCenter();
-                Vector2D c2 = paddle.getCenter();
-                int r1 = ball.getRadius();
-                int r2 = ball.getRadius();
-                //Compute the distance between the centers
-                double dist = c1.dist(c2);
-//                System.out.println(Math.abs( dist - (r1+r2)) );
-                //if collision happens, then get the components of velocity along the normal and the tangent
-                if(Math.abs( dist - (r1+r2)) <= 2){
-                    System.out.println("Collsion detected");
-                    //for this, get the normal of the paddle at the point of collision
-                    //the normal is along the line joining the centers of the two circles
 
-                }
-            }
+//            //Collision detection for circular paddle
+//            else if (paddle.getType() == 2){
+//                //Collision detection for circular paddle
+//                //Get the centers of the ball and the circular paddle
+//                Vector2D c1 = ball.getCenter();
+//                Vector2D c2 = paddle.getCenter();
+//                int r1 = ball.getRadius();
+//                int r2 = ball.getRadius();
+//                //Compute the distance between the centers
+//                double dist = c1.dist(c2);
+////                System.out.println(Math.abs( dist - (r1+r2)) );
+//                //if collision happens, then get the components of velocity along the normal and the tangent
+//                if(Math.abs( dist - (r1+r2)) <= 2){
+//                    System.out.println("Collsion detected");
+//                    //for this, get the normal of the paddle at the point of collision
+//                    //the normal is along the line joining the centers of the two circles
+//
+//                }
+//            }
 
 
             //detect collision of ball with board walls
@@ -459,23 +554,46 @@ public class Board extends JPanel implements Runnable{
             double dx = px - x;
             double dy = py - y;
             double dist = Math.sqrt(dx * dx + dy * dy);
+            System.out.println(ball.last_hit_by);
             //collected power-up
             if (dist < pr + r && ball.last_hit_by>0){
                 int type = p.gettype();
                 if (type == 1){
+                    System.out.println("Here9");
+                    lives[ball.last_hit_by-1]++;
+                    live = false;
+                    specialPaddle[0] = ball.last_hit_by;
                     lives[ball.last_hit_by-1]++;
                 }
                 if (type == 2){
                     long powerEffect = System.currentTimeMillis();
                     powerCollect.add(new powerUp(2, p.getX(), p.getY(), powerEffect));
-                    //code for freezing paddle i
+                    specialPaddle[1] = ball.last_hit_by;
+                    freeze = false;
+                    freezeOver = false;
+                    speed[ball.last_hit_by-1] = paddleArray[ball.last_hit_by-1].getPaddleSpeed();
                 }
                 if (type == 3){
+                    System.out.println("Here11");
+                    elongate = false;
+                    specialPaddle[2] = ball.last_hit_by;
                     lives[ball.last_hit_by-1]++;
                 }
                 if (type == 4){
 
-                    lives[ball.last_hit_by-1]++;
+                    System.out.println("Here12");
+                    long powerEffect = System.currentTimeMillis();
+                    powerCollect.add(new powerUp(4, p.getX(), p.getY(), powerEffect));
+                    fastPaddle = false;
+                    fastPaddleOver = false;
+                    specialPaddle[3] = ball.last_hit_by;
+                }
+                if (type == 5){
+                    System.out.println("Here15");
+                    long powerEffect = System.currentTimeMillis();
+                    //change ball direction here
+                    dirChange = false;
+                    specialPaddle[4] = ball.last_hit_by;
                 }
 
                 powerUps.remove(i);
@@ -491,9 +609,13 @@ public class Board extends JPanel implements Runnable{
         powerDelay = 10000;
         for (int i = 0; i < powerUps.size(); i++){
             powerTime = powerUps.get(i).getstarttime();
-            //powerDiff = 0
             powerDiff = System.currentTimeMillis() - powerTime;
             if(powerDiff > powerDelay) {
+                if(powerUps.get(i).gettype() == 1) live = false;
+                if(powerUps.get(i).gettype() == 2) freeze = false;
+                if(powerUps.get(i).gettype() == 3) elongate = false;
+                if(powerUps.get(i).gettype() == 4) fastPaddle = false;
+                if(powerUps.get(i).gettype() == 5) dirChange = false;
                 powerUps.remove(i);
                 i--;
             }
@@ -504,13 +626,32 @@ public class Board extends JPanel implements Runnable{
         long powerTime, powerDiff, powerDelay;
         powerDelay = 5000;
         for (int i = 0; i < powerCollect.size(); i++){
+            powerUp power = powerCollect.get(i);
             powerTime = powerCollect.get(i).getstarttime();
             //powerDiff = 0
             powerDiff = System.currentTimeMillis() - powerTime;
-            if(powerDiff > powerDelay) {
-                powerCollect.remove(i);
-                i--;
+            //code for freezing paddle i
+            if (power.gettype() == 2){
+                if (!freezeOver) paddleArray[specialPaddle[1]-1].setPaddleSpeed(0);
+                if(powerDiff > powerDelay) {
+                    paddleArray[specialPaddle[1]-1].setPaddleSpeed(4);
+                    freezeOver = true;
+                    System.out.println(78374);
+                    powerCollect.remove(i);
+                    i--;
+                }
             }
+            if (power.gettype() == 4){
+                if (!fastPaddleOver) paddleArray[specialPaddle[3]-1].setPaddleSpeed(8);
+                if(powerDiff > powerDelay) {
+                    paddleArray[specialPaddle[3]-1].setPaddleSpeed(4);
+                    fastPaddleOver = true;
+                    System.out.println(65774);
+                    powerCollect.remove(i);
+                    i--;
+                }
+            }
+
         }
 
     }

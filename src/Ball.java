@@ -85,38 +85,28 @@ public class Ball extends Sprite implements Commons {
         //Ball hits the left wall
         if (X <= 0 && ballVelocity.X < 0) {
             ballVelocity.X *= -1 ;
-            wall_hit = 4;
+            wall_hit = 3;
             send_score_packet();
         }
 
         //Ball hits the right wall
         else if (X > WIDTH - width && ballVelocity.X >0) {
             ballVelocity.X *= -1;
-            wall_hit = 3;
+            wall_hit = 4;
             send_score_packet();
-        }
-        //Ball hits the top wall
-        if (Y <= height && ballVelocity.Y < 0) {
-            ballVelocity.Y *= -1;
-            wall_hit = 2;
-            send_score_packet();
-        }
-        //Ball hits the bottom wall
-        if (Y >= HEIGHT  - height && ballVelocity.Y > 0) {
-            ballVelocity.Y *= -1;
-            wall_hit = 1;
-           send_score_packet();
         }
         //Ball hits the top wall
         else if (Y <= 0 && ballVelocity.Y < 0) {
             ballVelocity.Y *= -1;
-            wall_hit = 1;
+            wall_hit = 2;
+            send_score_packet();
 
         }
+        //Ball hits the bottom wall
         else if (Y > HEIGHT - height && ballVelocity.Y > 0) {
-
             ballVelocity.Y *= -1;
-            wall_hit = 2;
+            wall_hit = 1;
+            send_score_packet();
         }
         else{
             wall_hit = 0;
