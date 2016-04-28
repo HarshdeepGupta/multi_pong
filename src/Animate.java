@@ -98,7 +98,7 @@ public class Animate extends JPanel
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        y += 5;
+        y += 8;
         if (y >= 450){
             timer.stop();
             st = false;

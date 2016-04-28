@@ -50,7 +50,7 @@ public class Sprite {
 
     Rectangle getRect() {
         return new Rectangle(position.X, position.Y,
-                image.getWidth(null), image.getHeight(null));
+                this.getWidth(), this.getHeight());
     }
 
     Rectangle getSquare() {

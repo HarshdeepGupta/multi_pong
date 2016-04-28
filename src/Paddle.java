@@ -9,19 +9,32 @@ import java.awt.event.KeyEvent;
 public class Paddle extends Sprite implements Commons {
 
     protected Vector2D paddleVelocity;
-    Vector2D normal;
+    protected Vector2D normal;
     protected int paddleID;
     protected int score;
+
+    private int radius;
+
     //move_x = true means paddle can move only in x direction
-    protected boolean move_x, move_y;
-    protected boolean isbot;
+    protected boolean move_x, move_y,isBot;
+
     /*Paddle ID 1 is at the bottom edge
     Paddle ID 2 is at the left edge
     Paddle ID 3 is at the top edge
     Paddle ID 4 is at the right edge
     */
     protected int paddleSpeed;
-    public Paddle(int paddleID){
+    private int type;
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public Paddle(int paddleID, int type){
 
 
         paddleVelocity = new Vector2D();
@@ -32,17 +45,30 @@ public class Paddle extends Sprite implements Commons {
         this.paddleID = paddleID;
         move_x = false;
         move_y = false;
+        this.type = type;
+        radius=30;
         resetState();
-        isbot = false;
-
-        width = image.getWidth(null);
-        height = image.getHeight(null);
+        isBot = false;
         paddleSpeed = 4;
+
 
     }
     public void draw(Graphics2D g2d){
-        g2d.drawImage(this.getImage(), this.getX(), this.getY(),
-                this.getWidth(), this.getHeight(), null);
+        if(type == 1){
+            g2d.drawRect(position.X,position.Y,width,height);
+            g2d.setColor(Color.green.brighter());
+            g2d.fillRect(position.X,position.Y,width,height);
+
+        }
+        if(type == 2){
+
+            g2d.setColor(Color.cyan);
+            g2d.setStroke(new BasicStroke(3));
+            g2d.drawOval(this.getX(),this.getY()-radius ,2*radius,2*radius);
+            g2d.setStroke(new BasicStroke(1));
+        }
+
+
     }
 
     public void movePaddle(){
@@ -54,8 +80,8 @@ public class Paddle extends Sprite implements Commons {
                 X = 0;
             }
 
-            if (X >= WIDTH - width) {
-                X = WIDTH - width;
+            if (X >= WIDTH - width ) {
+                X = WIDTH - width ;
             }
             position.X = X;
         }
@@ -66,8 +92,8 @@ public class Paddle extends Sprite implements Commons {
                 Y = 0;
             }
 
-            if (Y >= HEIGHT-height) {
-                Y = HEIGHT-height;
+            if (Y >= HEIGHT-width) {
+                Y = HEIGHT-width;
             }
             position.Y = Y;
         }
@@ -122,9 +148,9 @@ public class Paddle extends Sprite implements Commons {
             normal.X = 0;//0
             normal.Y = 1;//1
             move_x = true;
-            //Set the image
-            ImageIcon ii = new ImageIcon("paddle_horizontal.png");
-            image =  ii.getImage();
+            width = 2*radius;
+            height = 5;
+
         }
         else if(paddleID == 2){
             //Initialize the position on the board
@@ -134,9 +160,8 @@ public class Paddle extends Sprite implements Commons {
             normal.X = 0;
             normal.Y = -1;
             move_x = true;
-            //Set the image
-            ImageIcon ii = new ImageIcon("paddle_horizontal.png");
-            image =  ii.getImage();
+            width = 2*radius;
+            height = 5;
         }
 
         else if(paddleID ==3){
@@ -147,9 +172,8 @@ public class Paddle extends Sprite implements Commons {
             normal.X = 1;
             normal.Y = 0;
             move_y = true;
-            //Set the image
-            ImageIcon ii = new ImageIcon("paddle_vertical.png");
-            image =  ii.getImage();
+            width = 5;
+            height = 2*radius;
         }
 
         else if(paddleID ==4){
@@ -160,9 +184,8 @@ public class Paddle extends Sprite implements Commons {
             normal.X = -1;
             normal.Y = 0;
             move_y = true;
-            //Set the image
-            ImageIcon ii = new ImageIcon("paddle_vertical.png");
-            image =  ii.getImage();
+            width = 5;
+            height = 2*radius;
         }
         else{
             System.out.println("Error in assigning paddleID");
@@ -187,11 +210,16 @@ public class Paddle extends Sprite implements Commons {
         paddleVelocity.Y = y;
     }
 
-    public void setIsbot(boolean isbot){
-        this.isbot = isbot;
+
+    public Vector2D getCenter() {
+        return new Vector2D(position.X + radius, position.Y + radius);
     }
-    public boolean getIsBot(){
-        return isbot;
+
+    public void setBot(boolean bot){
+        this.isBot = bot;
+    }
+    public boolean getIsBot() {
+        return isBot;
     }
 
 }
