@@ -299,9 +299,15 @@ public class Board extends JPanel implements Runnable {
                     powerUps.add(new powerUp(1, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
 
-/*                //update power ups
-=======
-*/
+                //update power ups
+                for(int i = 0; i < powerUps.size(); i++){
+                    boolean remove = powerUps.get(i).update();
+                    if (remove){
+                        powerUps.remove(i);
+                        i--;
+                    }
+                }
+
                 if(single_player) {
                     for(int i=0;i<3;i++)
                         if (botarray[i].is_attached()) {
@@ -314,14 +320,7 @@ public class Board extends JPanel implements Runnable {
                             botarray[i].updateBot();
                         }
                 }
-               //update power ups
-                for(int i = 0; i < powerUps.size(); i++){
-                    boolean remove = powerUps.get(i).update();
-                    if (remove){
-                        powerUps.remove(i);
-                        i--;
-                    }
-                }
+
 
                 repaint();
 //            System.out.println("Here");
