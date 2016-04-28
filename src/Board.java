@@ -540,6 +540,7 @@ public class Board extends JPanel implements Runnable{
 
     public void reduce_lives(int id){
         lives[id] = lives[id]-1;
+        System.out.println("herehere");
     }
 
     ///////////////Code for updating game state ends////////////////

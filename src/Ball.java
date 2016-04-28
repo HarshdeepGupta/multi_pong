@@ -11,19 +11,19 @@ public class Ball extends Sprite implements Commons {
 
     private Color color1;
     private Color color2;
-
-    protected int last_hit_by;
     protected int wall_hit;
+    protected int last_hit_by;
+
     protected Vector2D center;
     private int radius;
-
     public int getRadius() {
         return radius;
     }
-
     public void setRadius(int radius) {
         this.radius = radius;
     }
+
+
 
 
     public Ball() {
@@ -38,6 +38,8 @@ public class Ball extends Sprite implements Commons {
         height = 2*radius;
 
         resetState();
+
+
     }
 
     public void moveBall() {
@@ -80,11 +82,12 @@ public class Ball extends Sprite implements Commons {
             wall_hit = 2;
 //            System.out.print("Here4");
         }
-        //Ball hits no wall
-
         else{
             wall_hit = 0;
         }
+        position.X = X;
+        position.Y = Y;
+
     }
 
     private void resetState() {
@@ -114,9 +117,7 @@ public class Ball extends Sprite implements Commons {
         g2d.setStroke(new BasicStroke(3));
         g2d.setColor(color1.darker());
         g2d.drawOval(position.X , position.Y , 2*radius, 2*radius);
-        g2d.setStroke(new BasicStroke(1));
 
-        //g2d.drawImage(this.getImage(),this.getX(),this.getY(),this.getWidth(),this.getHeight(),null);
     }
 
     public Vector2D getCenter(){
@@ -128,4 +129,14 @@ public class Ball extends Sprite implements Commons {
         return new Rectangle(position.X +ballVelocity.X, position.Y + ballVelocity.Y,
                 this.getWidth(), this.getHeight());
     }
+
+    public void setBallVelocity(int ball_x,int ball_y){
+        ballVelocity.X = ball_x;
+        ballVelocity.Y = ball_y;
+    }
+
+    public Vector2D getBallVelocity(){
+        return ballVelocity;
+    }
+
 }
