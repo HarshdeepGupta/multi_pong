@@ -9,6 +9,7 @@ public class Bot {
 
 
 
+
     public Bot( Ball ball, int difficulty) {
         this.ball = ball;
         this.difficulty = difficulty*100;
@@ -17,7 +18,7 @@ public class Bot {
     void attach(Paddle paddle){
         if(paddle != null){
             this.paddle = paddle;
-            paddle.setIsbot(true);
+            paddle.setBot(true);
         }
         else{
             System.out.println("Cannot attach bot to null paddle");
@@ -31,7 +32,7 @@ public class Bot {
     }
 
     void updateBot(){
-        int c = 20 - difficulty/100*5;
+        int c = 15 - difficulty/100*5;
         if(paddle.move_x && Math.abs(ball.position.Y-paddle.position.Y) < difficulty  ){
             if(ball.position.X-paddle.position.X >c ){
                 paddle.paddleVelocity.X = paddle.paddleSpeed;

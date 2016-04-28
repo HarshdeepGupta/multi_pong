@@ -12,11 +12,12 @@ public class Ball extends Sprite implements Commons {
 
     protected Vector2D ballVelocity;
     private int ballSpeed;
-     int last_hit_by;
+
     private Color color1;
     private Color color2;
     protected int wall_hit;
-    protected int wall_hit_temp;
+    protected int last_hit_by;
+
     protected Vector2D center;
     private int radius;
 
@@ -43,10 +44,10 @@ public class Ball extends Sprite implements Commons {
     public int getRadius() {
         return radius;
     }
-
     public void setRadius(int radius) {
         this.radius = radius;
     }
+
 
 
 
@@ -54,17 +55,13 @@ public class Ball extends Sprite implements Commons {
 
         ballVelocity = new Vector2D();
         position = new Vector2D();
+        radius = 10;
 
         color1 = Color.WHITE;
         color2 = Color.RED;
-//        ImageIcon ii = new ImageIcon("ball.jpeg");
-//        image = ii.getImage();
+        width = 2*radius;
+        height = 2*radius;
 
-//        width = image.getWidth(null);
-//        height = image.getHeight(null);
-
-        width = 10;
-        height = 10;
         resetState();
 
 
@@ -74,19 +71,26 @@ public class Ball extends Sprite implements Commons {
 
         int X = position.X;
         int Y = position.Y;
-
         X += ballVelocity.X;
         Y += ballVelocity.Y;
+        position.X = X;
+        position.Y = Y;
+//        System.out.print(WIDTH);
+//        System.out.print(" ");
+//        System.out.println(HEIGHT);
+//        System.out.print(X1);
+//        System.out.print(" ");
+//        System.out.println(Y1);
         //Detect the collision with the walls and update its velocity and wall_hit parameters
         //Ball hits the left wall
-        if (X <= width && ballVelocity.X < 0) {
+        if (X <= 0 && ballVelocity.X < 0) {
             ballVelocity.X *= -1 ;
             wall_hit = 4;
             send_score_packet();
         }
 
-        //Ball hits the right ball
-        if (X >= WIDTH - width && ballVelocity.X >0) {
+        //Ball hits the right wall
+        else if (X > WIDTH - width && ballVelocity.X >0) {
             ballVelocity.X *= -1;
             wall_hit = 3;
             send_score_packet();
@@ -103,27 +107,35 @@ public class Ball extends Sprite implements Commons {
             wall_hit = 1;
            send_score_packet();
         }
-        //Ball hits no wall
+        //Ball hits the top wall
+        else if (Y <= 0 && ballVelocity.Y < 0) {
+            ballVelocity.Y *= -1;
+            wall_hit = 1;
 
+        }
+        else if (Y > HEIGHT - height && ballVelocity.Y > 0) {
+
+            ballVelocity.Y *= -1;
+            wall_hit = 2;
+        }
         else{
             wall_hit = 0;
         }
-
-
-
         position.X = X;
         position.Y = Y;
+
     }
 
     private void resetState() {
         ballSpeed = 4;
 
-        ballVelocity.X = ballSpeed;
-        ballVelocity.Y = ballSpeed;
+        ballVelocity.X = (int)( 3 * Math.random()*ballSpeed - ballSpeed);
+        ballVelocity.Y = (int)( 4 * Math.random()*ballSpeed - ballSpeed);
 
         position.X = INIT_BALL_X;
         position.Y = INIT_BALL_Y;
         last_hit_by = 0;
+        wall_hit = 0;
     }
     public int getBallSpeed() {
         return ballSpeed;
@@ -137,13 +149,11 @@ public class Ball extends Sprite implements Commons {
     public void draw(Graphics2D g2d) {
 
         g2d.setColor(color1);
-        g2d.fillOval(position.X - 10, position.Y - 10, 20, 20);
+        g2d.fillOval(position.X , position.Y , 2*radius, 2*radius);
         g2d.setStroke(new BasicStroke(3));
         g2d.setColor(color1.darker());
-        g2d.drawOval(position.X - 10, position.Y - 10, 20, 20);
-        g2d.setStroke(new BasicStroke(1));
+        g2d.drawOval(position.X , position.Y , 2*radius, 2*radius);
 
-        //g2d.drawImage(this.getImage(),this.getX(),this.getY(),this.getWidth(),this.getHeight(),null);
     }
 
     public Vector2D getCenter(){

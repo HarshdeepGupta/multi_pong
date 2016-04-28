@@ -15,7 +15,7 @@ import javax.swing.event.*;
 import java.io.*;
 import java.util.ArrayList;
 
-public class server extends gui{
+public class server extends gui implements Commons{
 
 
     static boolean game_start = false;
@@ -235,8 +235,10 @@ public class server extends gui{
             jf.setVisible(false);
             JFrame new_frame= new JFrame();
             new_frame.add(board);
+            new_frame.getContentPane().setPreferredSize(new Dimension(Commons.WIDTH,
+                    Commons.HEIGHT));
             new_frame.pack();
-            new_frame.setSize(500,520);
+//            new_frame.setSize(Commons.WIDTH,Commons.HEIGHT);
             new_frame.setLocationRelativeTo(null);
             new_frame.setResizable(false);
             new_frame.setVisible(true);
@@ -521,10 +523,13 @@ public class server extends gui{
                                 board = new Board(myid,single_player,number_of_players);
                                 jf.setVisible(false);
                                 JFrame new_frame= new JFrame();
+
                                 new_frame.setTitle("Multipong");
+                                new_frame.getContentPane().setPreferredSize(new Dimension(Commons.WIDTH,
+                                        Commons.HEIGHT));
                                 new_frame.add(board);
                                 new_frame.pack();
-                                new_frame.setSize(500,520);
+//                                new_frame.setSize(Commons.WIDTH,Commons.HEIGHT);
                                 new_frame.setLocationRelativeTo(null);
                                 new_frame.setResizable(false);
                                 new_frame.setVisible(true);
@@ -758,55 +763,6 @@ public class server extends gui{
         });
         listen_to_ack.start();
     }
-    /*
-    private void check_game_point(){
 
-        final Thread listen_to_ack = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long beforeTime, timeDiff, sleep;
-
-                beforeTime = System.currentTimeMillis();
-                while(true){
-                    if(game_start==true) {
-                        //Logic for score detection has to come here
-
-                        if(single_player==true){
-
-                            int id=0;//detect id for the player which has missed the ball by the wall location where the ball has hit
-                            board.reduce_lives(id);
-
-                        }
-                        else{
-                            int id=0;//detect id for the player which has missed the ball by the wall location where the ball has hit
-                            //board.reduce_lives(id);
-
-                        }
-
-
-                    }
-                    timeDiff = System.currentTimeMillis() - beforeTime;
-                    sleep = DELAY - timeDiff;
-
-                    if (sleep < 0) {
-                        sleep = 2;
-                    }
-
-                    try {
-                        Thread.sleep(sleep);
-                    } catch (InterruptedException e) {
-                        System.out.println("Interrupted: " + e.getMessage());
-                    }
-
-                    beforeTime = System.currentTimeMillis();
-
-
-                }
-
-            }
-        });
-        listen_to_ack.start();
-    }
-    */
 }
 

@@ -19,8 +19,9 @@ public class Vector2D {
         this.Y = y;
     }
 
-    public Vector2D add(Vector2D V) {
-        return new Vector2D(this.X + V.X, this.Y + V.Y);
+    public void add(Vector2D V) {
+        this.X += V.X;
+        this.Y += V.Y;
     }
 
     public Vector2D sub( Vector2D V) {
@@ -38,6 +39,11 @@ public class Vector2D {
     public double length(){
 
         return Math.sqrt(this.dot(this)) ;
+    }
+
+    public double dist(Vector2D V){
+        return Math.sqrt((this.X-V.X)*(this.X-V.X) + (this.Y-V.Y)*(this.Y-V.Y));
+
     }
 
 
