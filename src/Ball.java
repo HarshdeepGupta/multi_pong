@@ -1,5 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 /**
  * Created by hd on 14/4/16.
@@ -15,6 +19,26 @@ public class Ball extends Sprite implements Commons {
     protected int wall_hit_temp;
     protected Vector2D center;
     private int radius;
+
+
+    //For Networking from this class
+    int number_of_players;
+    DatagramSocket socket1;
+    String[] ip_array;
+    int[] port_array;
+    int myid;
+    String my_ip;
+
+    public void setNetwork(DatagramSocket socket1,int number_of_players,int[] port_array,int myid,String my_ip,String[] ip_array) {
+        this.socket1 = socket1;
+        this.number_of_players = number_of_players;
+        this.port_array = port_array;
+        this.myid = myid;
+        this.my_ip = my_ip;
+        this.ip_array = ip_array;
+    }
+
+
 
     public int getRadius() {
         return radius;
@@ -58,42 +82,26 @@ public class Ball extends Sprite implements Commons {
         if (X <= width && ballVelocity.X < 0) {
             ballVelocity.X *= -1 ;
             wall_hit = 4;
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted: " + e.getMessage());
-            }
+            send_score_packet();
         }
 
         //Ball hits the right ball
         if (X >= WIDTH - width && ballVelocity.X >0) {
             ballVelocity.X *= -1;
             wall_hit = 3;
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted: " + e.getMessage());
-            }
+            send_score_packet();
         }
         //Ball hits the top wall
         if (Y <= height && ballVelocity.Y < 0) {
             ballVelocity.Y *= -1;
             wall_hit = 2;
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted: " + e.getMessage());
-            }
+            send_score_packet();
         }
         //Ball hits the bottom wall
         if (Y >= HEIGHT  - height && ballVelocity.Y > 0) {
             ballVelocity.Y *= -1;
             wall_hit = 1;
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted: " + e.getMessage());
-            }
+           send_score_packet();
         }
         //Ball hits no wall
 
@@ -157,4 +165,27 @@ public class Ball extends Sprite implements Commons {
         return ballVelocity;
     }
 
+    public void send_score_packet(){
+        try{
+            //System.out.println("time".concat(String.valueOf(System.currentTimeMillis())));
+            //if(this.wall_hit!=0){
+                byte[] buf = new byte[256];
+                String temp = "6#my_ip=";
+                String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
+                        .concat("#score_id=").concat(String.valueOf(this.wall_hit-1))
+                        .concat("#time=")
+                        .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
+                buf = my_id.getBytes();// here we want our ip-address instead
+                System.out.println("sent".concat(my_id));
+                for (int i = 0; i <= number_of_players; i++) {
+                    InetAddress address = InetAddress.getByName(ip_array[i]);
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
+                    socket1.send(packet);
+                }
+            //}
+        }
+        catch (IOException e) {
+
+        }
+    }
 }

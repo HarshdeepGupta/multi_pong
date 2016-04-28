@@ -3,6 +3,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 
@@ -242,7 +243,7 @@ public class Board extends JPanel implements Runnable {
 
             if (waitTimer == 0 && wait){
                 wait = false;
-                System.out.println(2);
+
                 waitTimer = System.currentTimeMillis();
             }
             else {
@@ -282,19 +283,19 @@ public class Board extends JPanel implements Runnable {
                 //chance for power ups
                 double rand = Math.random();
                 if (rand < .001) {
-                    System.out.println("Here1");
+
                     powerUps.add(new powerUp(4, Math.abs(ball.getX() - 20), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
                 else if (rand < 0.002) {
-                    System.out.println("Here2");
+
                     powerUps.add(new powerUp(3, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 20), System.currentTimeMillis()));
                 }
                 else if (rand < 0.003) {
-                    System.out.println("Here3");
+
                     powerUps.add(new powerUp(2, Math.abs(ball.getX() - 20), Math.abs(ball.getY() - 20), System.currentTimeMillis()));
                 }
                 else if (rand < 0.004) {
-                    System.out.println("Here4");
+
                     powerUps.add(new powerUp(1, Math.abs(ball.getX() - 30), Math.abs(ball.getY() - 30), System.currentTimeMillis()));
                 }
 
@@ -363,7 +364,7 @@ public class Board extends JPanel implements Runnable {
                     ball.ballVelocity.add(paddle.paddleVelocity);
                     //also update the last_hit_by
                     ball.last_hit_by = paddle.paddleID;
-                    System.out.print(ball.last_hit_by);
+                   // System.out.print(ball.last_hit_by);
 
                 }
             }
@@ -387,22 +388,20 @@ public class Board extends JPanel implements Runnable {
             if (dist < pr + r){
                 int type = p.gettype();
                 if (type == 1){
-                    System.out.println("Here9");
-                    lives[ball.last_hit_by]++;
+
+                    lives[ball.last_hit_by-1]++;
                 }
                 if (type == 2){
-                    System.out.println("Here10");
                     long powerEffect = System.currentTimeMillis();
                     powerCollect.add(new powerUp(2, p.getX(), p.getY(), powerEffect));
                     //code for freezing paddle i
                 }
                 if (type == 3){
-                    System.out.println("Here11");
-                    lives[ball.last_hit_by]++;
+                    lives[ball.last_hit_by-1]++;
                 }
                 if (type == 4){
-                    System.out.println("Here12");
-                    lives[ball.last_hit_by]++;
+
+                    lives[ball.last_hit_by-1]++;
                 }
                 powerUps.remove(i);
                 i--;
@@ -453,7 +452,7 @@ public class Board extends JPanel implements Runnable {
     }
 
     void setPaddleArray(int id,int speed,int velocity_x,int velocity_y){
-        System.out.println(id);
+
         paddleArray[id].setPaddleSpeed(speed);
         paddleArray[id].setPaddleVelocity(velocity_x,velocity_y);
     }
@@ -503,7 +502,10 @@ public class Board extends JPanel implements Runnable {
 
     public void reduce_lives(int id){
         lives[id] = lives[id]-1;
-        System.out.println("herehere");
+    }
+
+    public ArrayList<powerUp> getPowerUps(){
+        return powerUps;
     }
 
     ///////////////Code for updating game state ends////////////////

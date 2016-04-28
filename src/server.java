@@ -13,6 +13,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.io.*;
+import java.util.ArrayList;
 
 public class server extends gui{
 
@@ -30,7 +31,7 @@ public class server extends gui{
 
     int myid=0;// global player_id in the game
     //String my_ip = InetAddress.getLocalHost().getHostAddress().toString();
-    String my_ip = "192.168.43.221";
+    String my_ip = "192.168.0.100";
     int my_port = 4456;
 
     int number_of_players=0;
@@ -53,7 +54,8 @@ public class server extends gui{
     boolean is_host = false;
     int current_host = 0;
     long time_array_score[] = new long[4];
-
+    ArrayList<powerUp> powerUps;
+    ArrayList<powerUp> powerCollect;
 
     JFrame jf;
 
@@ -240,9 +242,17 @@ public class server extends gui{
             new_frame.setVisible(true);
             paddles = board.getPaddleArray();
             board.setSET_KEY_LISTENER_ON(myid);
+            /*
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupted: " + e.getMessage());
+            }
+            */
             board.setMyid(myid);
             board.setNumber_of_players(number_of_players);
             ball = board.getball();
+            ball.setNetwork(socket1,number_of_players,port_array,myid,my_ip,ip_array);
             game_start = true;
         }
     }
@@ -265,15 +275,17 @@ public class server extends gui{
                         buf = new byte[256];
                         packet = new DatagramPacket (buf, buf.length);
                         socket1.receive (packet);
-
                         String received = new String (packet.getData(),packet.getOffset(),packet.getLength());
                         System.out.println("received".concat(received));
 
                         if(received.length()!=0) {
+                            //System.out.println("receiving".concat(received));
                             if (Integer.parseInt(Character.toString(received.charAt(0))) == 0) {//packet contains the ip
                                 boolean contains=false;
                                 String received_ip  = received.substring(received.indexOf("ip") + 3, received.indexOf("port") - 1);
+                                System.out.println("error"+received_ip);
                                 for (int i=0;i<number_of_players;i++){
+                                    System.out.println("error"+String.valueOf(i));
                                     if(ip_array[i].equals(received_ip)){
                                         contains = true;
                                     }
@@ -521,6 +533,7 @@ public class server extends gui{
                                 board.setMyid(myid);
                                 board.setNumber_of_players(number_of_players);
                                 ball = board.getball();
+                                ball.setNetwork(socket1,number_of_players,port_array,myid,my_ip,ip_array);
                                 current_host = 0;
                                 game_start = true;
                             }
@@ -660,60 +673,14 @@ public class server extends gui{
                         catch (IOException e) {
                             System.out.println("Empty ip address");
                         }
-                        try{
-                            if(ball.wall_hit!=0){
-                            byte[] buf = new byte[256];
-                            String temp = "6#my_ip=";
-                            String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
-                                    .concat("#score_id=").concat(String.valueOf(ball.wall_hit-1))
-                                    .concat("#time=")
-                                    .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
-                            buf = my_id.getBytes();// here we want our ip-address instead
-                            System.out.println("sent".concat(my_id));
-                            for (int i = 0; i <= number_of_players; i++) {
-                                //if(i!=myid){
-                                    System.out.println(ip_array[i]);
-                                System.out.println(i);
-                                    InetAddress address = InetAddress.getByName(ip_array[i]);
-                                    DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
-                                    socket1.send(packet);
-                                  //  }
-                                }
-                            }
-                        }
-                        catch (IOException e) {
-
-                        }
-
                     }
 
                     if(game_start==true && number_of_players==0){
-                        try{
 
-                            if(ball.wall_hit!=0){
-                                byte[] buf = new byte[256];
-                                String temp = "6#my_ip=";
-                                String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
-                                        .concat("#score_id=").concat(String.valueOf(ball.wall_hit-1))
-                                        .concat("#time=")
-                                        .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
-                                buf = my_id.getBytes();// here we want our ip-address instead
-                                System.out.println("sent".concat(my_id));
-                                for (int i = 0; i <= number_of_players; i++) {
-                                    System.out.println("sent".concat(ip_array[i]));
-                                    System.out.println(port_array[i]);
-                                    InetAddress address = InetAddress.getByName(ip_array[i]);
-                                    DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
-                                    socket1.send(packet);
-                                }
-                            }
-                        }
-                        catch (IOException e) {
-
-                        }
                     }
 
                     timeDiff = System.currentTimeMillis() - beforeTime;
+
                     sleep = DELAY - timeDiff;
 
                     if (sleep < 0) {
