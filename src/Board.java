@@ -86,7 +86,7 @@ public class Board extends JPanel implements Runnable{
         setDoubleBuffered(true);
         paddleArray = new Paddle[NO_OF_PADDLES];
         for (int i = 0;i<NO_OF_PADDLES;i++){
-            paddleArray[i] = new Paddle(i+1,1);
+            paddleArray[i] = new Paddle(i+1);
         }
 
 
@@ -339,7 +339,7 @@ public class Board extends JPanel implements Runnable{
                 double rand = Math.random();
                 double randx = 500*Math.random();
                 int x = ((int) randx);
-                System.out.println(x);
+//                System.out.println(x);
                 double randy = 500*Math.random();
                 int y = ((int) randy);
                 if (rand < .05 && !fastPaddle) {
@@ -473,41 +473,41 @@ public class Board extends JPanel implements Runnable{
                     ball.last_hit_by = paddle.paddleID;
                    // System.out.print(ball.last_hit_by);
                    */
-            if(paddle.getType() == 1){
-                //Collision detection for rectangular paddle
-                if(ball.getRect().intersects(paddle.getRect())){
-                    if(ball.ballVelocity.dot(paddle.normal) > 0){
 
-                        Vector2D vel = ball.ballVelocity;
-                        vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
-                        ball.ballVelocity = vel;
-                        ball.ballVelocity.add(paddle.paddleVelocity);
-                        //also update the last_hit_by
-                        ball.last_hit_by = paddle.paddleID;
+            //Collision detection for rectangular paddle
+            if(ball.getRect().intersects(paddle.getRect())){
+                if(ball.ballVelocity.dot(paddle.normal) > 0){
+
+                    Vector2D vel = ball.ballVelocity;
+                    vel = vel.sub( paddle.normal.scalarMult(  2*(vel.dot(paddle.normal))));
+                    ball.ballVelocity = vel;
+                    ball.ballVelocity.add(paddle.paddleVelocity);
+                    //also update the last_hit_by
+                    ball.last_hit_by = paddle.paddleID;
 //                        System.out.print(ball.last_hit_by);
 
-                    }
                 }
             }
-            //Collision detection for circular paddle
-            else if (paddle.getType() == 2){
-                //Collision detection for circular paddle
-                //Get the centers of the ball and the circular paddle
-                Vector2D c1 = ball.getCenter();
-                Vector2D c2 = paddle.getCenter();
-                int r1 = ball.getRadius();
-                int r2 = ball.getRadius();
-                //Compute the distance between the centers
-                double dist = c1.dist(c2);
-//                System.out.println(Math.abs( dist - (r1+r2)) );
-                //if collision happens, then get the components of velocity along the normal and the tangent
-                if(Math.abs( dist - (r1+r2)) <= 2){
-                    System.out.println("Collsion detected");
-                    //for this, get the normal of the paddle at the point of collision
-                    //the normal is along the line joining the centers of the two circles
 
-                }
-            }
+//            //Collision detection for circular paddle
+//            else if (paddle.getType() == 2){
+//                //Collision detection for circular paddle
+//                //Get the centers of the ball and the circular paddle
+//                Vector2D c1 = ball.getCenter();
+//                Vector2D c2 = paddle.getCenter();
+//                int r1 = ball.getRadius();
+//                int r2 = ball.getRadius();
+//                //Compute the distance between the centers
+//                double dist = c1.dist(c2);
+////                System.out.println(Math.abs( dist - (r1+r2)) );
+//                //if collision happens, then get the components of velocity along the normal and the tangent
+//                if(Math.abs( dist - (r1+r2)) <= 2){
+//                    System.out.println("Collsion detected");
+//                    //for this, get the normal of the paddle at the point of collision
+//                    //the normal is along the line joining the centers of the two circles
+//
+//                }
+//            }
 
 
             //detect collision of ball with board walls
@@ -538,6 +538,7 @@ public class Board extends JPanel implements Runnable{
             double dx = px - x;
             double dy = py - y;
             double dist = Math.sqrt(dx * dx + dy * dy);
+            System.out.println(ball.last_hit_by);
             //collected power-up
             if (dist < pr + r && ball.last_hit_by>0){
                 int type = p.gettype();

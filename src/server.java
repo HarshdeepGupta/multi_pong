@@ -31,7 +31,7 @@ public class server extends gui implements Commons{
 
     int myid=0;// global player_id in the game
     //String my_ip = InetAddress.getLocalHost().getHostAddress().toString();
-    String my_ip = "192.168.0.100";
+    String my_ip = "192.168.43.245";
     int my_port = 4456;
 
     int number_of_players=0;
