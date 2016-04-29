@@ -183,6 +183,17 @@ public class Paddle extends Sprite implements Commons {
         paddleSpeed = speed;
     }
 
+    public void setPaddleColor(Color color){
+        paddleColor = color;
+    }
+
+    public Color getPaddleColor(){
+        if (paddleID == 1) return Color.green;
+        else if (paddleID == 2) return Color.red;
+        else if (paddleID == 3) return Color.yellow;
+        else return Color.MAGENTA;
+    }
+
     public void setPaddleVelocity(int x,int y){
         paddleVelocity.X = x;
         paddleVelocity.Y = y;
@@ -193,6 +204,12 @@ public class Paddle extends Sprite implements Commons {
     }
     public boolean getIsBot() {
         return isBot;
+    }
+    public boolean getMove_x() {
+        return move_x;
+    }
+    public boolean getMove_y() {
+        return move_y;
     }
 
 }

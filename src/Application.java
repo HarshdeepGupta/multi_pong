@@ -16,7 +16,8 @@ public class Application extends JFrame {
     public Clip clip;
 
     public boolean sound = false;
-    public String music = "Mute";
+    public String choice1 = "Mute";
+    public String choice2 = "Unmute";
 
     public Application() {
 
@@ -39,12 +40,13 @@ public class Application extends JFrame {
         setResizable(false);
         add(ex);
         //dispose();
-        if (sound){
+        /*if (!sound){
             music = "Mute";
+            sound = true;
         }
         else {
             music = "Unmute";
-        }
+        }*/
         createMenuBar();
         playSound(0);
         setSize(920, 575);
@@ -86,7 +88,7 @@ public class Application extends JFrame {
 
 
 
-        JMenuItem mute = new JMenuItem(music);
+        JMenuItem mute = new JMenuItem(choice1);
         mute.setMnemonic(KeyEvent.VK_E);
         mute.setToolTipText("Mute");
         mute.addActionListener(new ActionListener() {
@@ -94,9 +96,11 @@ public class Application extends JFrame {
             public void actionPerformed(ActionEvent event) {
                 if (sound){
                     playSound(1);
+                    mute.setText("Unmute");
                 }
                 else {
                     playSound(0);
+                    mute.setText("Mute");
                 }
             }
         });
