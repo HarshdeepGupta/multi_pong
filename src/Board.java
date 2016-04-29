@@ -94,7 +94,7 @@ public class Board extends JPanel implements Runnable{
         powerUps = new ArrayList<powerUp>();
         powerCollect = new ArrayList<powerUp>();
 
-        difficult=1;
+        difficult=getDifficult();
         freeze = false;
 
         /*Paddle ID 1 is at the  top edge
@@ -297,7 +297,7 @@ public class Board extends JPanel implements Runnable{
         g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
         String s = " - FACE OFF BEGINS IN FEW" + " SEC - ";
         int len = (int) g2d.getFontMetrics().getStringBounds(s, g2d).getWidth();
-        int transparency = (int) (255 * Math.sin(3.14 * (waitTimerDiff-d)/waitDelay));
+        int transparency = (int) (255 * Math.exp(- 3.14 * (waitTimerDiff-d)/waitDelay));
         if (transparency > 255) transparency = 255;
         if (transparency < 5 ) transparency = 0;
         g2d.setColor(new Color(255, 255, 255, transparency));

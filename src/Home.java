@@ -19,9 +19,6 @@ public class Home extends JFrame {
     private JButton single;
     private JButton multi;
     private JButton group;
-    private JButton help;
-    private JButton mute;
-    private JButton exit;
     private JTextArea area;
     private JTextArea option;
 
@@ -33,26 +30,20 @@ public class Home extends JFrame {
 
     private void initUI() {
 
+        int BUTTON_HEIGHT = 20;
+        int BUTTON_WIDTH = 150;
+
+
 
         single = new JButton("Single Player");
         single.setToolTipText("Play against Computer");
-        single.setBounds(700, 350, 120, 25);
+        single.setBounds(700, 350, BUTTON_WIDTH, BUTTON_HEIGHT);
         multi = new JButton("Multi Player");
         multi.setToolTipText("Host a new Game");
-        multi.setBounds(700, 380, 120, 25);
+        multi.setBounds(700, 380, BUTTON_WIDTH, BUTTON_HEIGHT);
         group = new JButton("Connect to Host");
         group.setToolTipText("Play against your Friends");
-        group.setBounds(700, 410, 140, 30);
-        help = new JButton("Help");
-        help.setToolTipText("About the Game");
-        help.setBounds(100, 350, 120, 25);
-        mute = new JButton("Mute");
-        mute.setToolTipText("Turn off Sound");
-        mute.setBounds(100, 380, 120, 25);
-        exit = new JButton("Exit");
-        exit.setToolTipText("Exit the Game");
-        exit.setBounds(100, 410, 120, 25);
-
+        group.setBounds(700, 410, BUTTON_WIDTH, BUTTON_HEIGHT);
         single.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -96,7 +87,7 @@ public class Home extends JFrame {
             public void actionPerformed(ActionEvent event) {
                 try
                 {
-                    server f = new server ("Multipong Intern");
+                    server f = new server ("Multipong");
                     dispose();
                     f.pack ();
                     f.show ();
@@ -105,32 +96,14 @@ public class Home extends JFrame {
                 }
                 catch (IOException e)
                 {
-                    System.err.println("Couldn't get I/O for the connection to: 194.81.104.118.");
+                    System.err.println("Couldn't get I/O for the connection .");
                     System.exit(1);
                 }
             }
         });
-        help.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                dispose();
-                //System.exit(0);
-                Help help = new Help();
-                help.setVisible(true);
-            }
-        });
-//        mute.addActionListener(new ActionListener() {
-//
-//        });
-        exit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                System.exit(0);
-            }
-        });
 
 
-        area = new JTextArea("      Start a new Game");
+        area = new JTextArea("Start a new Game");
         area.setEditable(false);
         area.setBounds(700, 310, 160, 20);
         option = new JTextArea("         Options");
@@ -141,18 +114,16 @@ public class Home extends JFrame {
         add(multi);
         add(group);
         add(area);
-        add(help);
-        add(mute);
-        add(exit);
         add(option);
-        add(new Screen("back.jpg","name.png"));
+        add(new Screen("background.png"));
+//        add(new Screen("back.jpg","name.png"));
         setResizable(false);
 
 
         createMenuBar();
         setSize(920, 575);
 
-        setTitle("Multipong Intern");
+        setTitle("Multipong");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
     }
