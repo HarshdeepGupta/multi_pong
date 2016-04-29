@@ -4,8 +4,12 @@ import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.awt.image.ImageObserver;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
 import javax.swing.JPanel;
@@ -23,6 +27,7 @@ public class Board extends JPanel implements Runnable{
     private Bot[] bot_array_multi;
     private Bot[] botarray;
     private int myid;
+
 
     private boolean running;
     private int[] specialPaddle = new int[6];
@@ -48,11 +53,30 @@ public class Board extends JPanel implements Runnable{
     private boolean single_player;
     private int difficult;
     private int number_of_players;
+    private boolean is_host;
     //public static ArrayList<powerUp> powerUps;
 
 
     private int SET_KEY_LISTENER_ON;
     AffineTransform at = new AffineTransform();
+
+
+    //For Networking from this class
+
+    DatagramSocket socket1;
+    String[] ip_array;
+    int[] port_array;
+    String my_ip;
+
+    public void setNetwork(DatagramSocket socket1,int number_of_players,int[] port_array,int myid,String my_ip,String[] ip_array) {
+        this.socket1 = socket1;
+        this.number_of_players = number_of_players;
+        this.port_array = port_array;
+        this.myid = myid;
+        this.my_ip = my_ip;
+        this.ip_array = ip_array;
+    }
+
 
 
     public Board(int id,boolean single_player,int players){
@@ -72,7 +96,7 @@ public class Board extends JPanel implements Runnable{
         powerUps = new ArrayList<powerUp>();
         powerCollect = new ArrayList<powerUp>();
 
-        difficult=1;
+        difficult=getDifficult();
         freeze = false;
 
         /*Paddle ID 1 is at the  top edge
@@ -174,10 +198,10 @@ public class Board extends JPanel implements Runnable{
                 g2d.rotate(Math.PI, getWidth()/2, getHeight()/2);
                 break;
             case 2:
-                g2d.rotate((3*Math.PI )/ 2, getWidth()/2, getHeight()/2);
+                g2d.rotate((Math.PI )/ 2, getWidth()/2, getHeight()/2);
                 break;
             case 3:
-                g2d.rotate(Math.PI / 2, getWidth()/2, getHeight()/2);
+                g2d.rotate((-1*Math.PI) / 2, getWidth()/2, getHeight()/2);
                 break;
             default:
 
@@ -275,7 +299,7 @@ public class Board extends JPanel implements Runnable{
         g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
         String s = " - FACE OFF BEGINS IN FEW" + " SEC - ";
         int len = (int) g2d.getFontMetrics().getStringBounds(s, g2d).getWidth();
-        int transparency = (int) (255 * Math.sin(3.14 * (waitTimerDiff-d)/waitDelay));
+        int transparency = (int) (255 * Math.exp(- 3.14 * (waitTimerDiff-d)/waitDelay));
         if (transparency > 255) transparency = 255;
         if (transparency < 5 ) transparency = 0;
         g2d.setColor(new Color(255, 255, 255, transparency));
@@ -360,8 +384,7 @@ public class Board extends JPanel implements Runnable{
                 double randy = 0.95*getHeight()*Math.random();
                 int y = ((int) randy);
                 if (ball.last_hit_by > 0) {
-
-
+                    
                     if (rand < 0.0005 && !live) {
                         //System.out.println("Here4");
                         live = true;
@@ -389,14 +412,13 @@ public class Board extends JPanel implements Runnable{
                     }
                 }
                 //update power ups
-                for(int i = 0; i < powerUps.size(); i++){
+                for (int i = 0; i < powerUps.size(); i++) {
                     boolean remove = powerUps.get(i).update();
-                    if (remove){
+                    if (remove) {
                         powerUps.remove(i);
                         i--;
                     }
                 }
-
 
                 if(single_player) {
                     for(int i=0;i<3;i++)
@@ -558,10 +580,13 @@ public class Board extends JPanel implements Runnable{
             double dx = px - x;
             double dy = py - y;
             double dist = Math.sqrt(dx * dx + dy * dy);
+
             int id = ball.last_hit_by;
+            //System.out.println(ball.last_hit_by);
+
             //collected power-up
             if (dist < pr + r){
-                System.out.println("Last Hit by  ---- " + ball.last_hit_by);
+                //System.out.println("Last Hit by  ---- " + ball.last_hit_by);
                 if (id > 0) {
                     int type = p.gettype();
                     if (type == 1) {
@@ -706,6 +731,7 @@ public class Board extends JPanel implements Runnable{
                     paddleArray[specialPaddle[3]-1].setPaddleColor(new Color(255, 69, 0, 240));
                 }
                 if(powerDiff > powerDelay) {
+                    //TODO Error Here
                     paddleArray[specialPaddle[3]-1].setPaddleSpeed(4);
                     paddleArray[specialPaddle[3]-1].setPaddleColor(original);
                     fastPaddleOver = true;
@@ -788,5 +814,45 @@ public class Board extends JPanel implements Runnable{
     }
 
     ///////////////Code for updating game state ends////////////////
+
+    public void setIs_host(boolean is_host){
+        this.is_host  = is_host;
+    }
+
+    public void add_powerup(int type,int x,int y,long time_stamp){
+        powerUps.add(new powerUp(type,x,y,time_stamp));
+    }
+
+    public void send_power_packet(int type,int x,int y,long time_stamp){
+        try{
+            //System.out.println("time".concat(String.valueOf(System.currentTimeMillis())));
+            //if(this.wall_hit!=0){
+            byte[] buf = new byte[256];
+            String temp = "8#my_ip=";
+            String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
+                    .concat("#type=").concat(String.valueOf(type))
+                    .concat("#x_position=").concat(String.valueOf(x))
+                    .concat("#y_position=").concat(String.valueOf(y))
+                    .concat("#time_stamp=").concat(String.valueOf(time_stamp))
+                    .concat("#time=")
+                    .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
+            buf = my_id.getBytes();// here we want our ip-address instead
+            System.out.println("sent".concat(my_id));
+            for (int i = 0; i <= number_of_players; i++) {
+                if(i!=myid) {
+                    InetAddress address = InetAddress.getByName(ip_array[i]);
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
+                    socket1.send(packet);
+                }
+            }
+            //}
+        }
+        catch (IOException e) {
+
+        }
+    }
+
+
+
 
 }

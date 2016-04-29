@@ -10,6 +10,7 @@ import java.awt.*;
 import java.net.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.print.DocFlavor;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.io.*;
@@ -22,7 +23,7 @@ public class server extends gui implements Commons{
     public ButtonHandler bHandler;
     public ButtonHandler1 bHandler1;
     static DatagramSocket socket1;
-    private final int DELAY = 100;
+    private final int DELAY = 10;
     String[] ip_array = new String[4];
     int[] port_array = new int[4];
     long[] last_connected = new long[4];// To determine disconnection
@@ -31,7 +32,7 @@ public class server extends gui implements Commons{
 
     int myid=0;// global player_id in the game
     //String my_ip = InetAddress.getLocalHost().getHostAddress().toString();
-    String my_ip = "192.168.43.221";
+    String my_ip = "192.168.0.108";
     int my_port;
 
     int number_of_players=0;
@@ -55,7 +56,7 @@ public class server extends gui implements Commons{
     int current_host = 0;
     long time_array_score[] = new long[4];
     ArrayList<powerUp> powerUps;
-    ArrayList<powerUp> powerCollect;
+    //ArrayList<powerUp> powerCollect;
 
     JFrame jf;
 
@@ -93,7 +94,6 @@ public class server extends gui implements Commons{
         for(int i=0;i<4;i++){
             time_array_score[i] = 0;
         }
-        difficult=1;
         bot_array_multi = new Bot[3];
         initUI();
     }
@@ -131,7 +131,6 @@ public class server extends gui implements Commons{
         for(int i=0;i<4;i++){
             time_array_score[i] = 0;
         }
-        difficult=1;
         bot_array_multi = new Bot[3];
         jf = this;
         initUI();
@@ -226,12 +225,15 @@ public class server extends gui implements Commons{
                 } catch (IOException e) {
                 }
             }
+            int x_velocity = (int) (3 * Math.random() * 4 - 4);
+            int y_velocity = (int) (4 * Math.random() * 4 - 4);
             try {
                 //DatagramSocket socket = new DatagramSocket();
                 byte[] buf = new byte[256];
-
                 String temp = "5#num=".concat(String.valueOf(number_of_players)).concat("#");
-                temp = temp.concat("time=").concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
+                temp = temp.concat("time=").concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#")
+                        .concat("x_velocity=").concat(String.valueOf(x_velocity)).concat("#y_velocity=")
+                        .concat(String.valueOf(y_velocity)).concat("#");
                 buf = temp.getBytes();// here we want our ip-address instead
 
                 for (int i = 1; i <= number_of_players; i++) {
@@ -245,15 +247,25 @@ public class server extends gui implements Commons{
             }
             if(number_of_players==0){
                 single_player=true;
+                is_host=true;
+                my_ip = "127.0.0.1";
             }
             ip_array[myid] = my_ip;
             port_array[myid] = my_port;
-            container1.setVisible(false);
-            board = new Board(myid,single_player,number_of_players);
             if(myid==0){
                 is_host = true;
                 current_host = 0;
             }
+            container1.setVisible(false);
+
+            board = new Board(myid,single_player,number_of_players);
+            String difficulty = (String) cb.getSelectedItem();
+            if (difficulty == "  1  ") difficult = 1;
+            else if (difficulty == "  2  ") difficult = 2;
+            else if (difficulty == "  3  ") difficult = 3;
+            System.out.println("Here ------- "+difficult);
+            board.setDifficult(difficult);
+
             jf.setVisible(false);
             JFrame new_frame= new JFrame();
             new_frame.add(board);
@@ -275,7 +287,10 @@ public class server extends gui implements Commons{
             */
             board.setMyid(myid);
             board.setNumber_of_players(number_of_players);
+            board.setIs_host(is_host);
             ball = board.getball();
+            ball.setInitialVelocity(x_velocity,y_velocity);
+            board.setNetwork(socket1,number_of_players,port_array,myid,my_ip,ip_array);
             ball.setNetwork(socket1,number_of_players,port_array,myid,my_ip,ip_array);
             game_start = true;
         }
@@ -307,9 +322,9 @@ public class server extends gui implements Commons{
                             if (Integer.parseInt(Character.toString(received.charAt(0))) == 0) {//packet contains the ip
                                 boolean contains=false;
                                 String received_ip  = received.substring(received.indexOf("ip") + 3, received.indexOf("port") - 1);
-                                System.out.println("error"+received_ip);
+
                                 for (int i=0;i<number_of_players;i++){
-                                    System.out.println("error"+String.valueOf(i));
+
                                     if(ip_array[i].equals(received_ip)){
                                         contains = true;
                                     }
@@ -320,7 +335,7 @@ public class server extends gui implements Commons{
                                         ip_array[myid] = my_ip;
                                         port_array[myid] = my_port;
                                         int received_id =Integer.parseInt(received.substring(received.indexOf("my_id") + 6, received.indexOf("time") - 1));
-                                        if(ip_array[received_id]=="") {
+                                        if(ip_array[received_id].equals("")) {
                                             ip_array[received_id] = received.substring(received.indexOf("ip") + 3, received.indexOf("port") - 1);
                                             port_array[received_id] = Integer.parseInt(received.substring(received.indexOf("port") + 5, received.indexOf("your_id") - 1));
                                             number_of_players += 1;
@@ -406,6 +421,7 @@ public class server extends gui implements Commons{
                                     }
                                 }
                                 if(received.indexOf("ball_speed")!=-1){
+                                    //#ball_speed=4#ball_velocity_x=9#ball_velocity_y=-14#
                                     int ball_speed = Integer.parseInt(received.substring(received.indexOf("ball_speed")+11
                                             ,received.indexOf("ball_speed")+received.substring(received.indexOf("ball_speed"),received.length()).indexOf("#")));
                                     int ball_velocity_x = Integer.parseInt(received.substring(received.indexOf("ball_velocity_x")+16
@@ -417,8 +433,9 @@ public class server extends gui implements Commons{
                                 }
 
                                 //paddlevelocity_y = Integer.parseInt(Character.toString(received.charAt(received.indexOf("pv")+6)));
-                                paddles[id].setPaddleSpeed(paddlespeed);
-                                paddles[id].setPaddleVelocity(paddlevelocity_x,paddlevelocity_y);
+
+                                //paddles[id].setPaddleSpeed(paddlespeed);
+                                //paddles[id].setPaddleVelocity(paddlevelocity_x,paddlevelocity_y);
                                 last_connected[id] = time_stamp;
                                 board.setPaddleArray(id,paddlespeed,paddlevelocity_x,paddlevelocity_y);
 
@@ -446,7 +463,7 @@ public class server extends gui implements Commons{
                                             buf = new byte[256];
                                             String temp = "0#ip=".concat(my_ip).concat("#port=").concat(String.valueOf(my_port));
                                             temp = temp.concat("#your_id=").concat(String.valueOf(player_id)).concat("#my_id=").concat(String.valueOf(myid));
-                                            String my_id = temp.concat("#time=").concat(String.valueOf(java.lang.System.currentTimeMillis()));
+                                            String my_id = temp.concat("#time=").concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
                                             buf = my_id.getBytes();// here we want our ip-address instead
                                             InetAddress address = InetAddress.getByName(ip);
                                             packet = new DatagramPacket(buf, buf.length, address,port);
@@ -539,13 +556,24 @@ public class server extends gui implements Commons{
                             else if(Integer.parseInt(Character.toString(received.charAt(0))) == 5){
                                 long time_stamp = Long.parseLong(received.substring(received.indexOf("time")+5
                                         ,received.indexOf("time")+received.substring(received.indexOf("time"),received.length()).indexOf("#")));
+                                int x_velocity = Integer.parseInt(received.substring(received.indexOf("x_velocity")+11
+                                        ,received.indexOf("x_velocity")+received.substring(received.indexOf("x_velocity"),received.length()).indexOf("#")));
+                                int y_velocity = Integer.parseInt(received.substring(received.indexOf("y_velocity")+11
+                                        ,received.indexOf("y_velocity")+received.substring(received.indexOf("y_velocity"),received.length()).indexOf("#")));
                                 last_connected[0] = time_stamp;
                                 container1.setVisible(false);
                                 single_player=false;
+                                current_host = 0;
+                                is_host = false;
                                 board = new Board(myid,single_player,number_of_players);
+                                String difficulty = (String) cb.getSelectedItem();
+                                if (difficulty == "  1  ") difficult = 1;
+                                else if (difficulty == "  2  ") difficult = 2;
+                                else if (difficulty == "  3  ") difficult = 3;
+                                System.out.println("Here ------- "+difficult);
+                                board.setDifficult(difficult);
                                 jf.setVisible(false);
                                 JFrame new_frame= new JFrame();
-
                                 new_frame.setTitle("Multipong");
                                 new_frame.getContentPane().setPreferredSize(new Dimension(Commons.WIDTH,
                                         Commons.HEIGHT));
@@ -557,11 +585,13 @@ public class server extends gui implements Commons{
                                 new_frame.setVisible(true);
                                 paddles = board.getPaddleArray();
                                 board.setSET_KEY_LISTENER_ON(myid);
+                                board.setIs_host(is_host);
                                 board.setMyid(myid);
                                 board.setNumber_of_players(number_of_players);
                                 ball = board.getball();
+                                ball.setInitialVelocity(x_velocity,y_velocity);
+                                board.setNetwork(socket1,number_of_players,port_array,myid,my_ip,ip_array);
                                 ball.setNetwork(socket1,number_of_players,port_array,myid,my_ip,ip_array);
-                                current_host = 0;
                                 game_start = true;
                             }
                             else if(Integer.parseInt(Character.toString(received.charAt(0))) == 6){
@@ -593,6 +623,20 @@ public class server extends gui implements Commons{
                                 if(current_host==myid){
                                     is_host =true;
                                 }
+
+                            }
+                            else if(Integer.parseInt(Character.toString(received.charAt(0))) == 8){
+                                int type = Integer.parseInt(received.substring(received.indexOf("type")+5
+                                        ,received.indexOf("type")+received.substring(received.indexOf("type"),received.length()).indexOf("#")));
+                                int x = Integer.parseInt(received.substring(received.indexOf("x_position")+11
+                                        ,received.indexOf("x_position")+received.substring(received.indexOf("x_position"),received.length()).indexOf("#")));
+                                int y=Integer.parseInt(received.substring(received.indexOf("y_position")+11
+                                        ,received.indexOf("y_position")+received.substring(received.indexOf("y_position"),received.length()).indexOf("#")));
+                                long time_stamp = Long.parseLong(received.substring(received.indexOf("time_stamp")+11
+                                        ,received.indexOf("time_stamp")+received.substring(received.indexOf("time_stamp"),received.length()).indexOf("#")));
+                                board.add_powerup(type,x,y,time_stamp);
+
+
 
                             }
 
@@ -642,7 +686,7 @@ public class server extends gui implements Commons{
                                 }
                             }
                         } catch (IOException e) {
-                            System.out.println("Empty ip address");
+                            System.out.println("Empty ip address1");
                         }
                         try{
                             //Logic to detect which machine has disconnected
@@ -666,7 +710,7 @@ public class server extends gui implements Commons{
                                     buf = my_id.getBytes();// here we want our ip-address instead
 
                                     for (int i = 0; i <= number_of_players; i++) {
-                                        if (i!=id_disconnect) {
+                                        if (i!=id_disconnect && i!=myid) {
                                             System.out.println("sent".concat(my_id));
                                             InetAddress address = InetAddress.getByName(ip_array[i]);
                                             DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
@@ -675,7 +719,7 @@ public class server extends gui implements Commons{
                                     }
                                 }
                                 catch (IOException e) {
-                                    System.out.println("Empty ip address");
+                                    System.out.println("Empty ip address2");
                                 }
                             }
 
@@ -685,9 +729,11 @@ public class server extends gui implements Commons{
                                 String my_id = temp.concat("#time=")
                                         .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
                                 buf = my_id.getBytes();// here we want our ip-address instead
-
+                                if(paddles[id_disconnect].getIsBot()==false) {
+                                    board.add_bot(id_disconnect);
+                                }
                                 for (int i = 0; i <= number_of_players; i++) {
-                                    if (i!=id_disconnect) {
+                                    if (i!=id_disconnect && i!=myid) {
                                         System.out.println("sent".concat(my_id));
                                         InetAddress address = InetAddress.getByName(ip_array[i]);
                                         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
@@ -698,12 +744,8 @@ public class server extends gui implements Commons{
                             }
                         }
                         catch (IOException e) {
-                            System.out.println("Empty ip address");
+                            System.out.println("Empty ip address3");
                         }
-                    }
-
-                    if(game_start==true && number_of_players==0){
-
                     }
 
                     timeDiff = System.currentTimeMillis() - beforeTime;

@@ -17,7 +17,8 @@ public class Ball extends Sprite implements Commons {
     private Color color2;
     protected int wall_hit;
     protected int last_hit_by;
-
+    protected int x_velocity_initial;
+    protected int y_velocity_initial;
     protected Vector2D center;
     private int radius;
 
@@ -62,7 +63,6 @@ public class Ball extends Sprite implements Commons {
         width = 2*radius;
         height = 2*radius;
 
-        resetState();
 
 
     }
@@ -118,10 +118,18 @@ public class Ball extends Sprite implements Commons {
 
     private void resetState() {
         ballSpeed = 4;
-
-        ballVelocity.X = (int)( 3 * Math.random()*ballSpeed - ballSpeed);
-        ballVelocity.Y = (int)( 4 * Math.random()*ballSpeed - ballSpeed);
-
+        /*
+        if(is_host) {
+            ballVelocity.X = (int) (3 * Math.random() * ballSpeed - ballSpeed);
+            ballVelocity.Y = (int) (4 * Math.random() * ballSpeed - ballSpeed);
+        }
+        else{
+            ballVelocity.X = 0;
+            ballVelocity.Y = 0;
+        }
+        */
+        ballVelocity.X = x_velocity_initial;
+        ballVelocity.Y = y_velocity_initial;
         position.X = INIT_BALL_X;
         position.Y = INIT_BALL_Y;
         last_hit_by = 0;
@@ -178,9 +186,6 @@ public class Ball extends Sprite implements Commons {
                 buf = my_id.getBytes();// here we want our ip-address instead
                 System.out.println("sent".concat(my_id));
                 for (int i = 0; i <= number_of_players; i++) {
-                    System.out.println(i);
-                    System.out.println(ip_array[i]);
-                    System.out.println(port_array[i]);
                     InetAddress address = InetAddress.getByName(ip_array[i]);
                     DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
                     socket1.send(packet);
@@ -191,4 +196,11 @@ public class Ball extends Sprite implements Commons {
 
         }
     }
+
+    public void setInitialVelocity(int x_velocity,int y_velocity){
+        x_velocity_initial = x_velocity;
+        y_velocity_initial = y_velocity;
+        resetState();
+    }
+
 }
