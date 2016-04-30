@@ -35,7 +35,7 @@ public class gui extends JFrame{
         super (title);
         initUI();
         try {
-            audioInputStream = AudioSystem.getAudioInputStream(new File("tune.wav").getAbsoluteFile());
+            audioInputStream = AudioSystem.getAudioInputStream(new File("Ask_Rufus.wav").getAbsoluteFile());
             clip = AudioSystem.getClip();
             clip.open(audioInputStream);
         } catch(Exception ex) {
@@ -135,7 +135,7 @@ public class gui extends JFrame{
         add(back);
         add(cb);
         //change the background here
-        add(new Screen("defend.jpg"));
+        add(new Screen("background1.png"));
         setResizable(false);
 
 

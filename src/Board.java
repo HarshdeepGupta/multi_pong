@@ -12,7 +12,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 public class Board extends JPanel implements Runnable{
 
@@ -27,6 +27,7 @@ public class Board extends JPanel implements Runnable{
     private Bot[] bot_array_multi;
     private Bot[] botarray;
     private int myid;
+
 
 
     private boolean running;
@@ -225,7 +226,6 @@ public class Board extends JPanel implements Runnable{
         drawBall(g2d);
         drawPowerUps(g2d);
         drawPlayerLives(g2d);
-
     }
 
     private void drawBall(Graphics2D g2d) {
@@ -265,7 +265,7 @@ public class Board extends JPanel implements Runnable{
                 }
             }
             if (j == 2) {
-                for(int i = 0; i < lives[j]; i++){
+                for(int i = 0; i < lives[3]; i++){
                     g2d.setColor(Color.YELLOW);
                     g2d.fillOval(480, 430 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(3));
@@ -275,7 +275,7 @@ public class Board extends JPanel implements Runnable{
                 }
             }
             if (j == 3) {
-                for(int i = 0; i < lives[j]; i++){
+                for(int i = 0; i < lives[2]; i++){
                     g2d.setColor(Color.MAGENTA);
                     g2d.fillOval(30, 20 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(3));
