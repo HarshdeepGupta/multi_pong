@@ -22,6 +22,7 @@ public class powerUp extends Sprite implements Commons{
     // 3 -----  longer paddle
     // 4 -----  faster paddle
     // 5 -----  ball direction change
+    // 6 -----  black hole
 
     //Constructor
     public powerUp(int type, int x, int y, long start) {
@@ -35,11 +36,11 @@ public class powerUp extends Sprite implements Commons{
         r = 0;
         startTime = start;
         if (type == 1) {
-            color1 = Color.GRAY;
+            color1 = Color.GREEN;
             r = 5;
         }
         if (type == 2) {
-            color1 = Color.WHITE;
+            color1 = Color.BLUE;
             r = 5;
         }
         if (type == 3) {
@@ -51,10 +52,13 @@ public class powerUp extends Sprite implements Commons{
             r = 5;
         }
         if (type == 5) {
-            color1 = Color.BLUE;
+            color1 = Color.WHITE;
             r = 5;
         }
-
+        if (type == 6) {
+            color1 = Color.ORANGE;
+            r = 5;
+        }
 
     }
 

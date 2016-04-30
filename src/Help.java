@@ -55,6 +55,18 @@ public class Help extends JFrame {
             }
         });
 
+        JMenuItem home = new JMenuItem("Home");
+        home.setMnemonic(KeyEvent.VK_E);
+        home.setToolTipText("Return to Home Screen");
+        home.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                dispose();
+                Home ex = new Home();
+                ex.setVisible(true);
+            }
+        });
+
         JMenuItem mute = new JMenuItem("Mute");
         mute.setMnemonic(KeyEvent.VK_E);
         mute.setToolTipText("Mute");
@@ -105,6 +117,7 @@ public class Help extends JFrame {
 
 
         file.add(exit);
+        file.add(home);
         menubar.add(file);
 
         level.add(max);

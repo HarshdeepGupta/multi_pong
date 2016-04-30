@@ -12,9 +12,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
-import javax.swing.JPanel;
+import javax.swing.*;
 
-public class Board extends JPanel implements Runnable{
+public class Board extends JPanel implements Runnable, Commons{
 
 
     private final int DELAY = 25;
@@ -28,23 +28,27 @@ public class Board extends JPanel implements Runnable{
     private Bot[] botarray;
     private int myid;
 
-
     private boolean running;
-    private int[] specialPaddle = new int[5];
+    private int[] specialPaddle = new int[6];
     private boolean freeze;
     private boolean elongate = false;
+    private boolean elongateOver = true;
     private boolean fastPaddleOver = true;
     private boolean fastPaddle = false;
     private boolean live = false;
+    private boolean blackbox = false;
     private boolean dirChange = false;
     private boolean freezeOver = true;
-    private int[] lives = new int[5];
-    private int[] speed = new int[5];
+    private int[] lives = new int[4];
+    private boolean[] hold = new boolean[4];
+    private int[] speed = new int[4];
+    private long[] holdTimer = new long[4];
 
-
+    private int playersOut = 0;
     private long waitTimer;
     private long waitTimerDiff;
     private boolean wait;
+    private boolean winner;
     private int waitDelay = 1000 ;
     public static ArrayList<powerUp> powerUps;
     public static ArrayList<powerUp> powerCollect;
@@ -102,10 +106,16 @@ public class Board extends JPanel implements Runnable{
         this.single_player = single_player;
         this.number_of_players = players;
         initBoard(id);
+        for (int j = 0; j < 4; j++){
+            hold[j] = true;
+            holdTimer[j] = 0;
+        }
+        winner = false;
     }
 
 
     private void initBoard(int id) {
+
         setBackground(Color.DARK_GRAY);
         myid = id;
 
@@ -115,7 +125,8 @@ public class Board extends JPanel implements Runnable{
         powerUps = new ArrayList<powerUp>();
         powerCollect = new ArrayList<powerUp>();
 
-        difficult=1;
+        //difficult=getDifficult();
+        difficult = 2;
         freeze = false;
 
         /*Paddle ID 1 is at the  top edge
@@ -229,9 +240,6 @@ public class Board extends JPanel implements Runnable{
 
         }
 
-
-
-
         drawGameObjects(g2d);
 
         Toolkit.getDefaultToolkit().sync();
@@ -268,41 +276,41 @@ public class Board extends JPanel implements Runnable{
         for (int j = 0; j < 4; j++) {
             if (j == 0){
                 for(int i = 0; i < lives[j]; i++){
-                    g2d.setColor(Color.WHITE);
-                    g2d.fillOval(20 + (20 * i), 450, 7, 7);
+                    g2d.setColor(Color.GREEN);
+                    g2d.fillOval(20 + (12 * i), paddleArray[j].getY()-30, 7, 7);
                     g2d.setStroke(new BasicStroke(3));
-                    g2d.setColor(Color.WHITE.darker());
-                    g2d.fillOval(20 + (20 * i), 450, 7, 7);
+                    g2d.setColor(Color.GREEN.darker());
+                    g2d.fillOval(20 + (12 * i), paddleArray[j].getY()-30, 7, 7);
                     g2d.setStroke(new BasicStroke(1));
                 }
             }
             if (j == 1) {
                 for(int i = 0; i < lives[j]; i++){
-                    g2d.setColor(Color.WHITE);
-                    g2d.fillOval(400 + (20 * i), 50, 7, 7);
+                    g2d.setColor(Color.RED);
+                    g2d.fillOval(430 + (12 * i), 30, 7, 7);
                     g2d.setStroke(new BasicStroke(3));
-                    g2d.setColor(Color.WHITE.darker());
-                    g2d.fillOval(400 + (20 * i), 50, 7, 7);
+                    g2d.setColor(Color.RED.darker());
+                    g2d.fillOval(430 + (12 * i), 30, 7, 7);
                     g2d.setStroke(new BasicStroke(1));
                 }
             }
             if (j == 2) {
-                for(int i = 0; i < lives[j]; i++){
-                    g2d.setColor(Color.WHITE);
-                    g2d.fillOval(450, 400 + (20 * i), 7, 7);
+                for(int i = 0; i < lives[3]; i++){
+                    g2d.setColor(Color.YELLOW);
+                    g2d.fillOval(480, 430 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(3));
-                    g2d.setColor(Color.WHITE.darker());
-                    g2d.fillOval(450, 400 + (20 * i), 7, 7);
+                    g2d.setColor(Color.YELLOW.darker());
+                    g2d.fillOval(480, 430 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(1));
                 }
             }
             if (j == 3) {
-                for(int i = 0; i < lives[j]; i++){
-                    g2d.setColor(Color.WHITE);
-                    g2d.fillOval(50, 20 + (20 * i), 7, 7);
+                for(int i = 0; i < lives[2]; i++){
+                    g2d.setColor(Color.MAGENTA);
+                    g2d.fillOval(30, 20 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(3));
-                    g2d.setColor(Color.WHITE.darker());
-                    g2d.fillOval(50, 20 + (20 * i), 7, 7);
+                    g2d.setColor(Color.MAGENTA.darker());
+                    g2d.fillOval(30, 20 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(1));
                 }
             }
@@ -321,7 +329,7 @@ public class Board extends JPanel implements Runnable{
         g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
         String s = " - FACE OFF BEGINS IN FEW" + " SEC - ";
         int len = (int) g2d.getFontMetrics().getStringBounds(s, g2d).getWidth();
-        int transparency = (int) (255 * Math.sin(3.14 * (waitTimerDiff-d)/waitDelay));
+        int transparency = (int) (255 * Math.exp(- 3.14 * (waitTimerDiff-d)/waitDelay));
         if (transparency > 255) transparency = 255;
         if (transparency < 5 ) transparency = 0;
         g2d.setColor(new Color(255, 255, 255, transparency));
@@ -359,26 +367,21 @@ public class Board extends JPanel implements Runnable{
 
         while (running) {
 
-            if (waitTimer == 0 && wait){
+            if (waitTimer == 0 && wait) {
                 wait = false;
 
                 waitTimer = System.currentTimeMillis();
-            }
-            else {
+            } else {
 
                 waitTimerDiff = System.currentTimeMillis() - waitTimer;
-                if (waitTimerDiff < waitDelay){
-                    drawText(3,0);
-                }
-                else if (waitTimerDiff > waitDelay && waitTimerDiff < 2 * waitDelay){
+                if (waitTimerDiff < waitDelay) {
+                    drawText(3, 0);
+                } else if (waitTimerDiff > waitDelay && waitTimerDiff < 2 * waitDelay) {
                     //System.out.println(89);
-                    drawText(2,waitDelay);
-                }
-                else if (waitTimerDiff > 2 * waitDelay && waitTimerDiff < 3 * waitDelay){
-                    drawText(1,2*waitDelay);
-                }
-
-                else {
+                    drawText(2, waitDelay);
+                } else if (waitTimerDiff > 2 * waitDelay && waitTimerDiff < 3 * waitDelay) {
+                    drawText(1, 2 * waitDelay);
+                } else {
                     wait = true;
                     waitTimerDiff = 0;
                 }
@@ -390,7 +393,8 @@ public class Board extends JPanel implements Runnable{
 
             //repaint();
 
-            if (wait){
+            //remove losy playes
+            if (wait) {
                 beforeTime = System.currentTimeMillis();
                 checkCollision();
                 updatePowerUp();
@@ -398,15 +402,43 @@ public class Board extends JPanel implements Runnable{
                 ball.moveBall();
                 movePaddles();
 
+                Graphics g2d = this.getGraphics();
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                //losing players
+                for (int i = 0; i < 4; i++) {
+                    if (lives[i] == 0 && hold[i]) {
+                        //drawOutPlayer(i);
+                        playersOut++;
+                        paddleArray[i].setHeight(0);
+                        paddleArray[i].setWidth(0);
+                        long holdTimerDiff;
+                        long holdDelay = 1000;
+                        System.out.println("HI, Player" + (i + 1) + " is out of the game");
+                        if (holdTimer[i] == 0) {
+                            hold[i] = false;
+                            System.out.println(2);
+                            holdTimer[i] = System.currentTimeMillis();
+                        }
+                        holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        while (holdTimerDiff < holdDelay) {
+                            holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                            g2d.drawString("Player" + (i + 1) + " is out of the game", 140, 250);
+                        }
+                        while (holdTimerDiff < 2 * holdDelay) {
+                            holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        }
+                    }
+                }
 
                 //chance for power ups
                 double rand = Math.random();
-                double randx = 500*Math.random();
+                double randx = 0.90 * getWidth() * Math.random();
                 int x = ((int) randx);
-//                System.out.println(x);
-                double randy = 500*Math.random();
+                double randy = 0.90 * getHeight() * Math.random();
                 int y = ((int) randy);
-                if(is_host && number_of_players==0) {
+
+                if (is_host && number_of_players == 0) {
                     if (rand < .05 && !fastPaddle) {
                         fastPaddle = true;
                         long time = System.currentTimeMillis();
@@ -447,88 +479,148 @@ public class Board extends JPanel implements Runnable{
                         global_x = x;
                         global_y = y;
                         global_time_stamp = time;
+
+                        if (ball.last_hit_by > 0) {
+
+                            if (rand < 0.0005 && !live) {
+                                //System.out.println("Here4");
+                                live = true;
+                                powerUps.add(new powerUp(1, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.001 && !freeze && freezeOver) {
+                                //System.out.println("Here3");
+                                freeze = true;
+                                powerUps.add(new powerUp(2, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.0015 && !elongate && elongateOver) {
+                                //System.out.println("Here2");
+                                elongate = true;
+                                powerUps.add(new powerUp(3, x, y, System.currentTimeMillis()));
+                            } else if (rand < .002 && !fastPaddle && fastPaddleOver) {
+                                //System.out.println("Here1");
+                                fastPaddle = true;
+                                powerUps.add(new powerUp(4, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.0025 && !dirChange) {
+                                //System.out.println("Here4");
+                                dirChange = true;
+                                powerUps.add(new powerUp(5, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.003 && !blackbox) {
+                                //System.out.println("Here4");
+                                blackbox = true;
+                                powerUps.add(new powerUp(6, x, y, System.currentTimeMillis()));
+                            }
+                        }
+                        //update power ups
+                        for (int i = 0; i < powerUps.size(); i++) {
+                            boolean remove = powerUps.get(i).update();
+                            if (remove) {
+                                powerUps.remove(i);
+                                i--;
+                            }
+                        }
+
+
+                        if (single_player) {
+                            for (int i = 0; i < 3; i++)
+                                if (botarray[i].is_attached()) {
+                                    botarray[i].updateBot();
+                                }
+                        } else {
+                            for (int i = 0; i < botarray.length; i++)
+                                if (botarray[i].is_attached()) {
+                                    botarray[i].updateBot();
+                                }
+                        }
+
+                        if (playersOut == 3 && !winner) {
+                            //game over declare the remaining player as winner
+                            long winnerTimerDiff;
+                            long winnerDelay = 3000;
+                            long winnerTimer = System.currentTimeMillis();
+                            winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                            for (int k = 0; k < 4; k++) {
+                                if (lives[k] > 0) {
+                                    g2d.setColor(Color.WHITE);
+                                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                                    System.out.println("HI, Player" + (k + 1) + " is the winner");
+
+//                            while (winnerTimerDiff < 1.5*winnerDelay) {
+//                                winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+//                                g.drawString(" ", 170, 250);
+//                            }
+                                    while (winnerTimerDiff < winnerDelay) {
+                                        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                                        g2d.drawString("Player" + (k + 1) + " is the winner", 170, 250);
+                                        winner = true;
+                                    }
+                                }
+                            }
+                            rematch();
+                        }
                     }
 
-                    //update power ups
-                }
 
-                //update power ups
-                for (int i = 0; i < powerUps.size(); i++) {
-                    boolean remove = powerUps.get(i).update();
-                    if (remove) {
-                        powerUps.remove(i);
-                        i--;
+                    repaint();
+
+                    timeDiff = System.currentTimeMillis() - beforeTime;
+                    sleep = DELAY - timeDiff;
+
+                    if (sleep < 0) {
+                        sleep = 2;
                     }
-                }
 
-                if(single_player) {
-                    for(int i=0;i<3;i++)
-                        if (botarray[i].is_attached()) {
-                            botarray[i].updateBot();
-                        }
-                }
-                else{
-                    for(int i=0;i<botarray.length;i++)
-                        if (botarray[i].is_attached()) {
-                            botarray[i].updateBot();
-                        }
-                }
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException e) {
+                        System.out.println("Interrupted: " + e.getMessage());
+                    }
 
 
-                repaint();
-                timeDiff = System.currentTimeMillis() - beforeTime;
-                sleep = DELAY - timeDiff;
-
-                if (sleep < 0) {
-                    sleep = 2;
-                }
-
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException e) {
-                    System.out.println("Interrupted: " + e.getMessage());
                 }
 
             }
-
-            /*for (int i = 0; i < 4; i++) {
-                if (lives[i] == 0) {
-                    //drawOutPlayer(i);
-                    wait = true;
-                    waitTimer = 0;
-                    waitTimerDiff = 0;
-                    running = true;
-
-
-                    Graphics g2d = this.getGraphics();
-                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
-
-                    //long beforeTime, timeDiff, sleep;
-
-                    while (running) {
-
-                        if (waitTimer == 0 && wait){
-                            wait = false;
-                            System.out.println(2);
-                            waitTimer = System.currentTimeMillis();
-                        }
-                        else {
-
-                            waitTimerDiff = System.currentTimeMillis() - waitTimer;
-                            if (waitTimerDiff < waitDelay){
-                                g2d.drawString("HI, you are out of the game", 200, 250);
-                            }
-                            else {
-                                wait = true;
-                                waitTimerDiff = 0;
-                            }
-                        }
-
-                    }
-                }
-            }*/
-
         }
+    }
+
+    private void rematch(){
+        long winnerTimerDiff;
+        long winnerDelay = 1000;
+        long winnerTimer = System.currentTimeMillis();
+        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+        Graphics g = this.getGraphics();
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+        while (winnerTimerDiff < 5*winnerDelay) {
+            winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+            g.drawString("Rematch starts in 5 sec", 180, 250);
+        }
+
+        winner = false;
+        playersOut = 0;
+        for (int j = 0; j < 4; j++){
+            hold[j] = true;
+            lives[j] = 3;
+            if (paddleArray[j].getMove_x()) paddleArray[j].setWidth(60);
+            if (paddleArray[j].getMove_y()) paddleArray[j].setWidth(5);
+            if (paddleArray[j].getMove_y()) paddleArray[j].setHeight(60);
+            if (paddleArray[j].getMove_x()) paddleArray[j].setHeight(5);
+            if (j == 0) {
+                paddleArray[j].setX(INIT_PADDLE1_X);
+                paddleArray[j].setY(INIT_PADDLE1_Y);
+            }
+            if (j == 1) {
+                paddleArray[j].setX(INIT_PADDLE2_X);
+                paddleArray[j].setY(INIT_PADDLE2_Y);
+            }
+            if (j == 2) {
+                paddleArray[j].setX(INIT_PADDLE3_X);
+                paddleArray[j].setY(INIT_PADDLE3_Y);
+            }
+            if (j == 3) {
+                paddleArray[j].setX(INIT_PADDLE4_X);
+                paddleArray[j].setY(INIT_PADDLE4_Y);
+            }
+        }
+        ball.setX(250);
+        ball.setY(250);
     }
 
 
@@ -612,7 +704,7 @@ public class Board extends JPanel implements Runnable{
         int px = ball.position.X;
         int py = ball.position.Y;
         //System
-        int pr  = 10;
+        int pr  = ball.getRadius();
         for (int i = 0; i < powerUps.size(); i++){
             powerUp p = powerUps.get(i);
             double x = p.getx();
@@ -621,42 +713,82 @@ public class Board extends JPanel implements Runnable{
             double dx = px - x;
             double dy = py - y;
             double dist = Math.sqrt(dx * dx + dy * dy);
-            //System.out.println(ball.last_hit_by);
-            //collected power-up
-            if (dist < pr + r && ball.last_hit_by>0){
-                int type = p.gettype();
-                if (type == 1){
-                    lives[ball.last_hit_by-1]++;
-                    live = false;
-                    specialPaddle[0] = ball.last_hit_by;
-                    lives[ball.last_hit_by-1]++;
-                }
-                if (type == 2){
-                    long powerEffect = System.currentTimeMillis();
-                    powerCollect.add(new powerUp(2, p.getX(), p.getY(), powerEffect));
-                    specialPaddle[1] = ball.last_hit_by;
-                    freeze = false;
-                    freezeOver = false;
-                    speed[ball.last_hit_by-1] = paddleArray[ball.last_hit_by-1].getPaddleSpeed();
-                }
-                if (type == 3){
-                    elongate = false;
-                    specialPaddle[2] = ball.last_hit_by;
-                    lives[ball.last_hit_by-1]++;
-                }
-                if (type == 4){
 
-                    long powerEffect = System.currentTimeMillis();
-                    powerCollect.add(new powerUp(4, p.getX(), p.getY(), powerEffect));
-                    fastPaddle = false;
-                    fastPaddleOver = false;
-                    specialPaddle[3] = ball.last_hit_by;
-                }
-                if (type == 5){
-                    long powerEffect = System.currentTimeMillis();
-                    //change ball direction here
-                    dirChange = false;
-                    specialPaddle[4] = ball.last_hit_by;
+            int id = ball.last_hit_by;
+            //System.out.println(ball.last_hit_by);
+
+            //collected power-up
+            if (dist < pr + r){
+                //System.out.println("Last Hit by  ---- " + ball.last_hit_by);
+                if (id > 0) {
+                    int type = p.gettype();
+                    if (type == 1) {
+                        //System.out.println("Here11");
+                        live = false;
+                        specialPaddle[0] = id;
+                        if (lives[id - 1] < 6) lives[id - 1]++;
+                    }
+                    if (type == 2) {
+                        //System.out.println("Here12");
+                        long powerEffect = System.currentTimeMillis();
+                        powerCollect.add(new powerUp(2, p.getX(), p.getY(), powerEffect));
+                        specialPaddle[1] = id;
+                        freeze = false;
+                        freezeOver = false;
+                        speed[id - 1] = 4;
+                    }
+                    if (type == 3) {
+                        //System.out.println("Here13");
+                        elongate = false;
+                        elongateOver = false;
+                        specialPaddle[2] = id;
+                        long powerEffect = System.currentTimeMillis();
+                        powerCollect.add(new powerUp(3, p.getX(), p.getY(), powerEffect));
+                    }
+                    if (type == 4) {
+
+                        //System.out.println("Here14");
+                        long powerEffect = System.currentTimeMillis();
+                        powerCollect.add(new powerUp(4, p.getX(), p.getY(), powerEffect));
+                        fastPaddle = false;
+                        fastPaddleOver = false;
+                        specialPaddle[3] = id;
+                    }
+                    if (type == 5) {
+                        //System.out.println("Here15");
+                        long powerEffect = System.currentTimeMillis();
+                        //change ball direction here
+                        double number = 3 * Math.random();
+                        int choice = ((int) number);
+                        switch (choice){
+                            case 0:
+                                ball.setBallVelocity(ball.ballVelocity.X * -1,ball.ballVelocity.Y * 1);
+                                break;
+                            case 1:
+                                ball.setBallVelocity(ball.ballVelocity.X * 1,ball.ballVelocity.Y * -1);
+                                break;
+                            case 2:
+                                ball.setBallVelocity(ball.ballVelocity.X * -1,ball.ballVelocity.Y * -1);
+                                break;
+                            default:
+                                ball.setBallVelocity(ball.ballVelocity.X * -1,ball.ballVelocity.Y * -1);
+                                break;
+
+                        }
+                        dirChange = false;
+                        specialPaddle[4] = id;
+                    }
+                    if (type == 6) {
+                        //System.out.println("Here16");
+                        long powerEffect = System.currentTimeMillis();
+                        //change ball position here
+                        ball.setX(p.getY());
+                        ball.setY(p.getX());
+                        blackbox = false;
+                        specialPaddle[5] = id;
+                    }
+                    System.out.println("Power Up " +p.gettype()+ " to " +id);
+                    System.out.println("Last Hit by  ---- " + ball.last_hit_by);
                 }
 
                 powerUps.remove(i);
@@ -679,6 +811,7 @@ public class Board extends JPanel implements Runnable{
                 if(powerUps.get(i).gettype() == 3) elongate = false;
                 if(powerUps.get(i).gettype() == 4) fastPaddle = false;
                 if(powerUps.get(i).gettype() == 5) dirChange = false;
+                if(powerUps.get(i).gettype() == 6) blackbox = false;
                 powerUps.remove(i);
                 i--;
             }
@@ -687,30 +820,55 @@ public class Board extends JPanel implements Runnable{
 
     private void updatePowerCollect(){
         long powerTime, powerDiff, powerDelay;
-        powerDelay = 5000;
         for (int i = 0; i < powerCollect.size(); i++){
             powerUp power = powerCollect.get(i);
             powerTime = powerCollect.get(i).getstarttime();
-            //powerDiff = 0
             powerDiff = System.currentTimeMillis() - powerTime;
             //code for freezing paddle i
             if (power.gettype() == 2){
-                if (!freezeOver) paddleArray[specialPaddle[1]-1].setPaddleSpeed(0);
+                Color original = paddleArray[specialPaddle[1]-1].getPaddleColor();
+                if (!freezeOver) {
+                    paddleArray[specialPaddle[1]-1].setPaddleSpeed(0);
+                    paddleArray[specialPaddle[1]-1].setPaddleColor(new Color(0, 245, 255, 240));
+                }
+                powerDelay = 5000;
                 if(powerDiff > powerDelay) {
                     paddleArray[specialPaddle[1]-1].setPaddleSpeed(4);
+                    paddleArray[specialPaddle[1]-1].setPaddleColor(original);
                     freezeOver = true;
-                    System.out.println(78374);
+                    //System.out.println(78374);
+                    powerCollect.remove(i);
+                    i--;
+                }
+            }
+            if (power.gettype() == 3){
+                if (!elongateOver) {
+                    if (paddleArray[specialPaddle[2]-1].getMove_x()) paddleArray[specialPaddle[2]-1].setWidth(120);
+                    if (paddleArray[specialPaddle[2]-1].getMove_y()) paddleArray[specialPaddle[2]-1].setHeight(120);
+                }
+                powerDelay = 10000;
+                if(powerDiff > powerDelay) {
+                    if (paddleArray[specialPaddle[2]-1].getMove_x()) paddleArray[specialPaddle[2]-1].setWidth(60);
+                    if (paddleArray[specialPaddle[2]-1].getMove_y()) paddleArray[specialPaddle[2]-1].setHeight(60);
+                    elongateOver = true;
+                    //System.out.println(65774);
                     powerCollect.remove(i);
                     i--;
                 }
             }
             if (power.gettype() == 4){
-                if (!fastPaddleOver) paddleArray[specialPaddle[3]-1].setPaddleSpeed(8);
+                Color original = paddleArray[specialPaddle[3]-1].getPaddleColor();
+                powerDelay = 10000;
+                if (!fastPaddleOver) {
+                    paddleArray[specialPaddle[3]-1].setPaddleSpeed(8);
+                    paddleArray[specialPaddle[3]-1].setPaddleColor(new Color(255, 69, 0, 240));
+                }
                 if(powerDiff > powerDelay) {
                     //TODO Error Here
                     paddleArray[specialPaddle[3]-1].setPaddleSpeed(4);
+                    paddleArray[specialPaddle[3]-1].setPaddleColor(original);
                     fastPaddleOver = true;
-                    System.out.println(65774);
+                    //System.out.println(65774);
                     powerCollect.remove(i);
                     i--;
                 }

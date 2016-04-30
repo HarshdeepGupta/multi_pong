@@ -95,7 +95,6 @@ public class server extends gui implements Commons{
         for(int i=0;i<4;i++){
             time_array_score[i] = 0;
         }
-        difficult=1;
         bot_array_multi = new Bot[3];
         initUI();
     }
@@ -133,7 +132,6 @@ public class server extends gui implements Commons{
         for(int i=0;i<4;i++){
             time_array_score[i] = 0;
         }
-        difficult=1;
         bot_array_multi = new Bot[3];
         jf = this;
         initUI();
@@ -268,6 +266,12 @@ public class server extends gui implements Commons{
             container1.setVisible(false);
 
             board = new Board(myid,single_player,number_of_players);
+            String difficulty = (String) cb.getSelectedItem();
+            if (difficulty == "  1  ") difficult = 1;
+            else if (difficulty == "  2  ") difficult = 2;
+            else if (difficulty == "  3  ") difficult = 3;
+            System.out.println("Here ------- "+difficult);
+            board.setDifficult(difficult);
 
             jf.setVisible(false);
             JFrame new_frame= new JFrame();
@@ -573,6 +577,12 @@ public class server extends gui implements Commons{
                                 current_host = 0;
                                 is_host = false;
                                 board = new Board(myid,single_player,number_of_players);
+                                String difficulty = (String) cb.getSelectedItem();
+                                if (difficulty == "  1  ") difficult = 1;
+                                else if (difficulty == "  2  ") difficult = 2;
+                                else if (difficulty == "  3  ") difficult = 3;
+                                System.out.println("Here ------- "+difficult);
+                                board.setDifficult(difficult);
                                 jf.setVisible(false);
                                 JFrame new_frame= new JFrame();
                                 new_frame.setTitle("Multipong");
