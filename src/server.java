@@ -22,6 +22,7 @@ public class server extends gui implements Commons{
     static boolean game_start = false;
     public ButtonHandler bHandler;
     public ButtonHandler1 bHandler1;
+    public ButtonHandler1 bHandler2;
     static DatagramSocket socket1;
     private final int DELAY = 100;
     String[] ip_array = new String[4];
@@ -69,13 +70,15 @@ public class server extends gui implements Commons{
         System.out.println(InetAddress.getLocalHost().getHostAddress());
         bHandler = new ButtonHandler ();
         bHandler1 = new ButtonHandler1();
-        sendButton.addActionListener (bHandler);
-        connect.addActionListener(bHandler1);
+        bHandler2 = new ButtonHandler1();
+        startSingle.addActionListener (bHandler);
+        startMultiple.addActionListener(bHandler1);
+        startGroup.addActionListener(bHandler2);
         socket1 = new DatagramSocket (my_port);
         my_port = socket1.getLocalPort();
         System.out.println(my_port);
-        txArea.setText(info);
-        rxArea.setText(info);
+        myipArea.setText(info);
+        hostipArea.setText(info);
         jf = this;
         container1 = this;
         for (int i=0;i<4;i++){
@@ -110,8 +113,10 @@ public class server extends gui implements Commons{
         System.out.println(InetAddress.getLocalHost().getHostAddress());
         bHandler = new ButtonHandler ();
         bHandler1 = new ButtonHandler1();
-        sendButton.addActionListener (bHandler);
-        connect.addActionListener(bHandler1);
+        bHandler2 = new ButtonHandler1();
+        startSingle.addActionListener (bHandler);
+        startMultiple.addActionListener(bHandler1);
+        startGroup.addActionListener(bHandler2);
         socket1 = new DatagramSocket ();
         my_port = socket1.getLocalPort();
         container1 = this;
@@ -157,12 +162,13 @@ public class server extends gui implements Commons{
                     // here we send our ip and our port to the host
                     //DatagramSocket socket = new DatagramSocket ();
                     byte[] buf = new byte[256];
-                    String ip_address = txArea.getText();
+                    String ip_address = hostipArea.getText();
                     String temp = "0#ip=";//127.0.0.1
                     String my_ip1 = temp.concat(my_ip);
                     my_ip1 = my_ip1.concat("#port=").concat(String.valueOf(my_port)).concat("#time=").concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
-                    int port_send = Integer.parseInt(rxArea.getText());// here the port of the host has to be entered and read from the txArea
+                    //int port_send = Integer.parseInt(rxArea.getText());// here the port of the host has to be entered and read from the txArea
                     buf = my_ip1.getBytes();
+                    int port_send = 12345;
                     InetAddress address = InetAddress.getByName(ip_address);
                     DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_send);
                     socket1.send(packet);

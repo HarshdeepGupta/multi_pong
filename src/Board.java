@@ -392,7 +392,7 @@ public class Board extends JPanel implements Runnable, Commons{
 
             //repaint();
 
-            //remove losy playes
+            //remove losing playes
             if (wait) {
                 beforeTime = System.currentTimeMillis();
                 checkCollision();
@@ -438,7 +438,7 @@ public class Board extends JPanel implements Runnable, Commons{
                 int y = ((int) randy);
 
                 if (is_host && number_of_players == 0) {
-                    if (rand < .05 && !fastPaddle) {
+                    if (rand < .005 && !fastPaddle) {
                         fastPaddle = true;
                         long time = System.currentTimeMillis();
                         powerUps.add(new powerUp(4, x, y, time));
@@ -446,7 +446,7 @@ public class Board extends JPanel implements Runnable, Commons{
                         global_x = x;
                         global_y = y;
                         global_time_stamp = time;
-                    } else if (rand < 0.01 && !dirChange) {
+                    } else if (rand < 0.001 && !dirChange) {
                         dirChange = true;
                         long time = System.currentTimeMillis();
                         powerUps.add(new powerUp(5, x, y, time));
@@ -454,7 +454,7 @@ public class Board extends JPanel implements Runnable, Commons{
                         global_x = x;
                         global_y = y;
                         global_time_stamp = time;
-                    } else if (rand < 0.02 && !elongate) {
+                    } else if (rand < 0.0015 && !elongate) {
                         elongate = true;
                         long time = System.currentTimeMillis();
                         powerUps.add(new powerUp(3, x, y, time));
@@ -462,7 +462,7 @@ public class Board extends JPanel implements Runnable, Commons{
                         global_x = x;
                         global_y = y;
                         global_time_stamp = time;
-                    } else if (rand < 0.03 && !freeze) {
+                    } else if (rand < 0.002 && !freeze) {
                         freeze = true;
                         long time = System.currentTimeMillis();
                         powerUps.add(new powerUp(2, x, y, time));
@@ -470,7 +470,7 @@ public class Board extends JPanel implements Runnable, Commons{
                         global_x = x;
                         global_y = y;
                         global_time_stamp = time;
-                    } else if (rand < 0.04 && !live) {
+                    } else if (rand < 0.0025 && !live) {
                         live = true;
                         long time = System.currentTimeMillis();
                         powerUps.add(new powerUp(1, x, y, time));
@@ -478,82 +478,65 @@ public class Board extends JPanel implements Runnable, Commons{
                         global_x = x;
                         global_y = y;
                         global_time_stamp = time;
+                    }
+                    else if (rand < 0.003 && !live) {
+                        long time = System.currentTimeMillis();
+                        blackbox = true;
+                        powerUps.add(new powerUp(6, x, y, System.currentTimeMillis()));
+                        global_type = 6;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
+                    }
 
-                        if (ball.last_hit_by > 0) {
 
-                            if (rand < 0.0005 && !live) {
-                                //System.out.println("Here4");
-                                live = true;
-                                powerUps.add(new powerUp(1, x, y, System.currentTimeMillis()));
-                            } else if (rand < 0.001 && !freeze && freezeOver) {
-                                //System.out.println("Here3");
-                                freeze = true;
-                                powerUps.add(new powerUp(2, x, y, System.currentTimeMillis()));
-                            } else if (rand < 0.0015 && !elongate && elongateOver) {
-                                //System.out.println("Here2");
-                                elongate = true;
-                                powerUps.add(new powerUp(3, x, y, System.currentTimeMillis()));
-                            } else if (rand < .002 && !fastPaddle && fastPaddleOver) {
-                                //System.out.println("Here1");
-                                fastPaddle = true;
-                                powerUps.add(new powerUp(4, x, y, System.currentTimeMillis()));
-                            } else if (rand < 0.0025 && !dirChange) {
-                                //System.out.println("Here4");
-                                dirChange = true;
-                                powerUps.add(new powerUp(5, x, y, System.currentTimeMillis()));
-                            } else if (rand < 0.003 && !blackbox) {
-                                //System.out.println("Here4");
-                                blackbox = true;
-                                powerUps.add(new powerUp(6, x, y, System.currentTimeMillis()));
+                    //update power ups
+                    for (int i = 0; i < powerUps.size(); i++) {
+                        boolean remove = powerUps.get(i).update();
+                        if (remove) {
+                            powerUps.remove(i);
+                            i--;
+                        }
+                    }
+
+
+                    if (single_player) {
+                        for (int i = 0; i < 3; i++)
+                            if (botarray[i].is_attached()) {
+                                botarray[i].updateBot();
                             }
-                        }
-                        //update power ups
-                        for (int i = 0; i < powerUps.size(); i++) {
-                            boolean remove = powerUps.get(i).update();
-                            if (remove) {
-                                powerUps.remove(i);
-                                i--;
+                    } else {
+                        for (int i = 0; i < botarray.length; i++)
+                            if (botarray[i].is_attached()) {
+                                botarray[i].updateBot();
                             }
-                        }
+                    }
 
-
-                        if (single_player) {
-                            for (int i = 0; i < 3; i++)
-                                if (botarray[i].is_attached()) {
-                                    botarray[i].updateBot();
-                                }
-                        } else {
-                            for (int i = 0; i < botarray.length; i++)
-                                if (botarray[i].is_attached()) {
-                                    botarray[i].updateBot();
-                                }
-                        }
-
-                        if (playersOut == 3 && !winner) {
-                            //game over declare the remaining player as winner
-                            long winnerTimerDiff;
-                            long winnerDelay = 3000;
-                            long winnerTimer = System.currentTimeMillis();
-                            winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
-                            for (int k = 0; k < 4; k++) {
-                                if (lives[k] > 0) {
-                                    g2d.setColor(Color.WHITE);
-                                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
-                                    System.out.println("HI, Player" + (k + 1) + " is the winner");
+                    if (playersOut == 3 && !winner) {
+                        //game over declare the remaining player as winner
+                        long winnerTimerDiff;
+                        long winnerDelay = 3000;
+                        long winnerTimer = System.currentTimeMillis();
+                        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                        for (int k = 0; k < 4; k++) {
+                            if (lives[k] > 0) {
+                                g2d.setColor(Color.WHITE);
+                                g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                                System.out.println("HI, Player" + (k + 1) + " is the winner");
 
 //                            while (winnerTimerDiff < 1.5*winnerDelay) {
 //                                winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
 //                                g.drawString(" ", 170, 250);
 //                            }
-                                    while (winnerTimerDiff < winnerDelay) {
-                                        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
-                                        g2d.drawString("Player" + (k + 1) + " is the winner", 170, 250);
-                                        winner = true;
-                                    }
+                                while (winnerTimerDiff < winnerDelay) {
+                                    winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                                    g2d.drawString("Player" + (k + 1) + " is the winner", 170, 250);
+                                    winner = true;
                                 }
+                                g2d.drawString(" ", 170, 250);
                             }
-                            rematch();
                         }
+                        rematch();
                     }
 
 

@@ -1,0 +1,45 @@
+
+
+			COP 290 : Assignment 3
+			
+			Multiplayer Pong Game
+
+
+	1) Scope of the game
+
+	a) Finally, single ball is used in the gameplay. We tried to introduce more 	balls, but the game becomes lethargic. Therefore, we decided to make the game 	more interesting primarily by the usage of power ups.
+
+	b) The power ups added are - extra life, freeze the paddle, elongate the 		paddle, increase the speed of paddle and ball.
+
+
+	2) Physics of the Game
+
+	a) No changes made in this section.
+
+
+	3) Artificial Intelligence
+
+	a) The difficulty level as defined in the design doc is used to initialise 		the bot on the board.
+
+	b) No significant change.
+
+	c) We have not provided with this option, once if a player is disconnected 		from the server, an AI bot smoothly replaces it and gameplay continues 		smoothly. The disconnected player can join in the next game but the current 	game is finished with the AI bot itself.
+
+
+	4) Networking
+
+	a) In addition to the mentioned information, we also exchange the power up’s 	co-ordinate and their types to sync the effect on all the machines.
+
+	b) No changes.
+
+	c) No changes
+
+
+	5) Modularity
+
+	a) Additional Classes used are powerUp, Bot, Home, Animate and gui(in place 	of display).
+
+
+	6) Game Play
+
+	a) No significant changes
