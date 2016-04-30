@@ -13,10 +13,10 @@ import javax.swing.event.*;
  */
 
 public class gui extends JFrame{
-    public JButton sendButton;
-    public JButton connect;
-    public JButton back;
-    public JTextArea txArea, rxArea, ip_ad, port, choice;
+    public JButton startSingle;
+    public JButton startMultiple;
+    public JButton startGroup;
+    public JTextArea myipArea, hostipArea, ip_ad, port, choice;
     public AudioInputStream audioInputStream;
     public Clip clip;
     public boolean sound = false;
@@ -77,19 +77,19 @@ public class gui extends JFrame{
 //        add(new Screen("back.jpg","name.png"));
         setResizable(false);
 
-        txArea = new JTextArea (6, 40);
-        txArea.setBounds(350, 410, 210, 40);
-        rxArea = new JTextArea (6, 40);
-        rxArea.setBounds(600, 410, 210, 40);
-        sendButton = new JButton("Start");
-        sendButton.setToolTipText("Start a new game");
-        connect = new JButton("Start");
-        connect.setToolTipText("Connect to an Existing Game");
-        sendButton.setBounds(100, 480, 120, 25);
-        connect.setBounds(350, 480, 120, 25);
-        back = new JButton("Start");
-        back.setToolTipText("Go Back to Home Screen");
-        back.setBounds(600, 480, 120, 25);
+        myipArea = new JTextArea (6, 40);
+        myipArea.setBounds(350, 410, 210, 40);
+        hostipArea = new JTextArea (6, 40);
+        hostipArea.setBounds(600, 410, 210, 40);
+        startSingle = new JButton("Start");
+        startSingle.setToolTipText("Start a new game");
+        startMultiple = new JButton("Start");
+        startMultiple.setToolTipText("Connect to an Existing Game");
+        startSingle.setBounds(100, 480, 120, 25);
+        startMultiple.setBounds(350, 480, 120, 25);
+        startGroup = new JButton("Start");
+        startGroup.setToolTipText("Go Back to Home Screen");
+        startGroup.setBounds(600, 480, 120, 25);
 
         choice = new JTextArea("  Choose the Difficulty Level");
         choice.setEditable(false);
@@ -98,7 +98,7 @@ public class gui extends JFrame{
         cb.setVisible(true);
         cb.setBounds(100, 420, 200, 25);
 
-        back.addActionListener(new ActionListener() {
+        startGroup.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
                 dispose();
@@ -125,14 +125,14 @@ public class gui extends JFrame{
         cb.setVisible(true);
         cb.setBounds(50, 250, 200, 25);*/
 
-        add(sendButton);
-        add(connect);
-        add(txArea);
-        add(rxArea);
+        add(startSingle);
+        add(startGroup);
+        add(startMultiple);
+        add(myipArea);
         add(port);
         add(ip_ad);
         add(choice);
-        add(back);
+        add(hostipArea);
         add(cb);
         //change the background here
         add(new Screen("defend.jpg"));
