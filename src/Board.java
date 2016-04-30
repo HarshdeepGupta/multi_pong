@@ -420,6 +420,11 @@ public class Board extends JPanel implements Runnable, Commons{
                             holdTimer[i] = System.currentTimeMillis();
                         }
                         holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        int player = 0;
+                        if (i == 0) player = 1;
+                        if (i == 1) player = 2;
+                        if (i == 2) player = 4;
+                        if (i == 3) player = 3;
                         while (holdTimerDiff < holdDelay) {
                             holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
                             g2d.drawString("Player" + (i + 1) + " is out of the game", 140, 250);
@@ -432,9 +437,9 @@ public class Board extends JPanel implements Runnable, Commons{
 
                 //chance for power ups
                 double rand = Math.random();
-                double randx = 0.90 * getWidth() * Math.random();
+                double randx = 0.80 * getWidth() * Math.random();
                 int x = ((int) randx);
-                double randy = 0.90 * getHeight() * Math.random();
+                double randy = 0.80 * getHeight() * Math.random();
                 int y = ((int) randy);
 
                 if (is_host && number_of_players == 0) {
@@ -522,7 +527,12 @@ public class Board extends JPanel implements Runnable, Commons{
                             if (lives[k] > 0) {
                                 g2d.setColor(Color.WHITE);
                                 g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
-                                System.out.println("HI, Player" + (k + 1) + " is the winner");
+                                int player = 0;
+                                if (k == 0) player = 1;
+                                if (k == 1) player = 2;
+                                if (k == 2) player = 4;
+                                if (k == 3) player = 3;
+                                System.out.println("HI, Player" + player + " is the winner");
 
 //                            while (winnerTimerDiff < 1.5*winnerDelay) {
 //                                winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
@@ -530,7 +540,7 @@ public class Board extends JPanel implements Runnable, Commons{
 //                            }
                                 while (winnerTimerDiff < winnerDelay) {
                                     winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
-                                    g2d.drawString("Player" + (k + 1) + " is the winner", 170, 250);
+                                    g2d.drawString("Player" + (k + 1) + " is the winner", 170, 300);
                                     winner = true;
                                 }
                                 g2d.drawString(" ", 170, 250);
@@ -572,13 +582,27 @@ public class Board extends JPanel implements Runnable, Commons{
         g.setFont(new Font("Century Gothic", Font.PLAIN, 20));
         while (winnerTimerDiff < 5*winnerDelay) {
             winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
-            g.drawString("Rematch starts in 5 sec", 180, 250);
+            g.drawString("Rematch starts in 5 sec", 180, 350);
         }
+
+        specialPaddle = new int[6];
+        elongate = false;
+        freeze = false;
+        elongateOver = true;
+        fastPaddleOver = true;
+        fastPaddle = false;
+        live = false;
+        blackbox = false;
+        dirChange = false;
+        freezeOver = true;
+        speed = new int[4];
+        holdTimer = new long[4];
 
         winner = false;
         playersOut = 0;
         for (int j = 0; j < 4; j++){
             hold[j] = true;
+            holdTimer[j] = 0;
             lives[j] = 3;
             if (paddleArray[j].getMove_x()) paddleArray[j].setWidth(60);
             if (paddleArray[j].getMove_y()) paddleArray[j].setWidth(5);
@@ -809,7 +833,7 @@ public class Board extends JPanel implements Runnable, Commons{
             //code for freezing paddle i
             if (power.gettype() == 2){
                 Color original = paddleArray[specialPaddle[1]-1].getPaddleColor();
-                if (!freezeOver) {
+                if (!freezeOver && !winner) {
                     paddleArray[specialPaddle[1]-1].setPaddleSpeed(0);
                     paddleArray[specialPaddle[1]-1].setPaddleColor(new Color(0, 245, 255, 240));
                 }
@@ -824,7 +848,7 @@ public class Board extends JPanel implements Runnable, Commons{
                 }
             }
             if (power.gettype() == 3){
-                if (!elongateOver) {
+                if (!elongateOver && !winner) {
                     if (paddleArray[specialPaddle[2]-1].getMove_x()) paddleArray[specialPaddle[2]-1].setWidth(120);
                     if (paddleArray[specialPaddle[2]-1].getMove_y()) paddleArray[specialPaddle[2]-1].setHeight(120);
                 }
@@ -841,7 +865,7 @@ public class Board extends JPanel implements Runnable, Commons{
             if (power.gettype() == 4){
                 Color original = paddleArray[specialPaddle[3]-1].getPaddleColor();
                 powerDelay = 10000;
-                if (!fastPaddleOver) {
+                if (!fastPaddleOver && !winner) {
                     paddleArray[specialPaddle[3]-1].setPaddleSpeed(8);
                     paddleArray[specialPaddle[3]-1].setPaddleColor(new Color(255, 69, 0, 240));
                 }
