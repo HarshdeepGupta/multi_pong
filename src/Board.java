@@ -12,9 +12,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
-import javax.swing.JPanel;
+import javax.swing.*;
 
-public class Board extends JPanel implements Runnable{
+public class Board extends JPanel implements Runnable, Commons{
 
 
     private final int DELAY = 25;
@@ -28,7 +28,6 @@ public class Board extends JPanel implements Runnable{
     private Bot[] botarray;
     private int myid;
 
-
     private boolean running;
     private int[] specialPaddle = new int[6];
     private boolean freeze;
@@ -41,12 +40,15 @@ public class Board extends JPanel implements Runnable{
     private boolean dirChange = false;
     private boolean freezeOver = true;
     private int[] lives = new int[4];
+    private boolean[] hold = new boolean[4];
     private int[] speed = new int[4];
+    private long[] holdTimer = new long[4];
 
-
+    private int playersOut = 0;
     private long waitTimer;
     private long waitTimerDiff;
     private boolean wait;
+    private boolean winner;
     private int waitDelay = 1000 ;
     public static ArrayList<powerUp> powerUps;
     public static ArrayList<powerUp> powerCollect;
@@ -83,10 +85,16 @@ public class Board extends JPanel implements Runnable{
         this.single_player = single_player;
         this.number_of_players = players;
         initBoard(id);
+        for (int j = 0; j < 4; j++){
+            hold[j] = true;
+            holdTimer[j] = 0;
+        }
+        winner = false;
     }
 
 
     private void initBoard(int id) {
+
         setBackground(Color.DARK_GRAY);
         myid = id;
 
@@ -96,7 +104,8 @@ public class Board extends JPanel implements Runnable{
         powerUps = new ArrayList<powerUp>();
         powerCollect = new ArrayList<powerUp>();
 
-        difficult=getDifficult();
+        //difficult=getDifficult();
+        difficult = 2;
         freeze = false;
 
         /*Paddle ID 1 is at the  top edge
@@ -159,6 +168,7 @@ public class Board extends JPanel implements Runnable{
         }
 
         bot_array_multi = new Bot[3];// To store dynamically created bots on disconnection
+
     }
 
 
@@ -206,9 +216,6 @@ public class Board extends JPanel implements Runnable{
             default:
 
         }
-
-
-
 
         drawGameObjects(g2d);
 
@@ -265,7 +272,7 @@ public class Board extends JPanel implements Runnable{
                 }
             }
             if (j == 2) {
-                for(int i = 0; i < lives[j]; i++){
+                for(int i = 0; i < lives[3]; i++){
                     g2d.setColor(Color.YELLOW);
                     g2d.fillOval(480, 430 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(3));
@@ -275,7 +282,7 @@ public class Board extends JPanel implements Runnable{
                 }
             }
             if (j == 3) {
-                for(int i = 0; i < lives[j]; i++){
+                for(int i = 0; i < lives[2]; i++){
                     g2d.setColor(Color.MAGENTA);
                     g2d.fillOval(30, 20 + (12 * i), 7, 7);
                     g2d.setStroke(new BasicStroke(3));
@@ -368,6 +375,7 @@ public class Board extends JPanel implements Runnable{
 
             //repaint();
 
+            //remove losy playes
             if (wait){
                 beforeTime = System.currentTimeMillis();
                 checkCollision();
@@ -376,15 +384,43 @@ public class Board extends JPanel implements Runnable{
                 ball.moveBall();
                 movePaddles();
 
+                Graphics g2d = this.getGraphics();
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                //losing players
+                for (int i = 0; i < 4; i++) {
+                    if (lives[i] == 0 && hold[i]) {
+                        //drawOutPlayer(i);
+                        playersOut++;
+                        paddleArray[i].setHeight(0);
+                        paddleArray[i].setWidth(0);
+                        long holdTimerDiff;
+                        long holdDelay = 1000;
+                        System.out.println("HI, Player" + (i+1) + " is out of the game");
+                        if (holdTimer[i] == 0){
+                            hold[i] = false;
+                            System.out.println(2);
+                            holdTimer[i] = System.currentTimeMillis();
+                        }
+                        holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        while (holdTimerDiff < holdDelay) {
+                            holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                            g2d.drawString("Player" + (i+1) + " is out of the game", 140, 250);
+                        }
+                        while (holdTimerDiff < 2*holdDelay) {
+                            holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        }
+                    }
+                }
 
                 //chance for power ups
                 double rand = Math.random();
-                double randx = 0.95*getWidth()*Math.random();
+                double randx = 0.90*getWidth()*Math.random();
                 int x = ((int) randx);
-                double randy = 0.95*getHeight()*Math.random();
+                double randy = 0.90*getHeight()*Math.random();
                 int y = ((int) randy);
                 if (ball.last_hit_by > 0) {
-                    
+
                     if (rand < 0.0005 && !live) {
                         //System.out.println("Here4");
                         live = true;
@@ -420,6 +456,7 @@ public class Board extends JPanel implements Runnable{
                     }
                 }
 
+
                 if(single_player) {
                     for(int i=0;i<3;i++)
                         if (botarray[i].is_attached()) {
@@ -433,8 +470,35 @@ public class Board extends JPanel implements Runnable{
                         }
                 }
 
+                if (playersOut == 3 && !winner){
+                    //game over declare the remaining player as winner
+                    long winnerTimerDiff;
+                    long winnerDelay = 3000;
+                    long winnerTimer = System.currentTimeMillis();
+                    winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                    for (int k = 0; k < 4; k++){
+                        if (lives[k] > 0){
+                            g2d.setColor(Color.WHITE);
+                            g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                            System.out.println("HI, Player" + (k+1) + " is the winner");
+
+//                            while (winnerTimerDiff < 1.5*winnerDelay) {
+//                                winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+//                                g.drawString(" ", 170, 250);
+//                            }
+                            while (winnerTimerDiff < winnerDelay) {
+                                winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                                g2d.drawString("Player" + (k + 1) + " is the winner", 170, 250);
+                                winner = true;
+                            }
+                        }
+                    }
+                    rematch();
+                }
+
 
                 repaint();
+
                 timeDiff = System.currentTimeMillis() - beforeTime;
                 sleep = DELAY - timeDiff;
 
@@ -448,46 +512,53 @@ public class Board extends JPanel implements Runnable{
                     System.out.println("Interrupted: " + e.getMessage());
                 }
 
+
             }
 
-            /*for (int i = 0; i < 4; i++) {
-                if (lives[i] == 0) {
-                    //drawOutPlayer(i);
-                    wait = true;
-                    waitTimer = 0;
-                    waitTimerDiff = 0;
-                    running = true;
-
-
-                    Graphics g2d = this.getGraphics();
-                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
-
-                    //long beforeTime, timeDiff, sleep;
-
-                    while (running) {
-
-                        if (waitTimer == 0 && wait){
-                            wait = false;
-                            System.out.println(2);
-                            waitTimer = System.currentTimeMillis();
-                        }
-                        else {
-
-                            waitTimerDiff = System.currentTimeMillis() - waitTimer;
-                            if (waitTimerDiff < waitDelay){
-                                g2d.drawString("HI, you are out of the game", 200, 250);
-                            }
-                            else {
-                                wait = true;
-                                waitTimerDiff = 0;
-                            }
-                        }
-
-                    }
-                }
-            }*/
-
         }
+    }
+
+    private void rematch(){
+        long winnerTimerDiff;
+        long winnerDelay = 1000;
+        long winnerTimer = System.currentTimeMillis();
+        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+        Graphics g = this.getGraphics();
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+        while (winnerTimerDiff < 5*winnerDelay) {
+            winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+            g.drawString("Rematch starts in 5 sec", 180, 250);
+        }
+
+        winner = false;
+        playersOut = 0;
+        for (int j = 0; j < 4; j++){
+            hold[j] = true;
+            lives[j] = 3;
+            if (paddleArray[j].getMove_x()) paddleArray[j].setWidth(60);
+            if (paddleArray[j].getMove_y()) paddleArray[j].setWidth(5);
+            if (paddleArray[j].getMove_y()) paddleArray[j].setHeight(60);
+            if (paddleArray[j].getMove_x()) paddleArray[j].setHeight(5);
+            if (j == 0) {
+                paddleArray[j].setX(INIT_PADDLE1_X);
+                paddleArray[j].setY(INIT_PADDLE1_Y);
+            }
+            if (j == 1) {
+                paddleArray[j].setX(INIT_PADDLE2_X);
+                paddleArray[j].setY(INIT_PADDLE2_Y);
+            }
+            if (j == 2) {
+                paddleArray[j].setX(INIT_PADDLE3_X);
+                paddleArray[j].setY(INIT_PADDLE3_Y);
+            }
+            if (j == 3) {
+                paddleArray[j].setX(INIT_PADDLE4_X);
+                paddleArray[j].setY(INIT_PADDLE4_Y);
+            }
+        }
+        ball.setX(250);
+        ball.setY(250);
     }
 
 

@@ -108,10 +108,10 @@ public class gui extends JFrame{
             }
         });
 
-        port = new JTextArea("     Enter your Port Number");
+        port = new JTextArea("     Enter your IP Address");
         port.setEditable(false);
         port.setBounds(350, 380, 210, 20);
-        ip_ad = new JTextArea("     Enter the Host Port Number");
+        ip_ad = new JTextArea("     Enter the Host IP Address");
         ip_ad.setEditable(false);
         ip_ad.setBounds(600, 380, 210, 20);
 
