@@ -1,0 +1,21 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="MultiPong:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MultiPong_jar</output-path>
+    <root id="archive" name="MultiPong.jar">
+      <element id="module-output" name="MultiPong" />
+      <element id="directory" name="folder" />
+      <element id="file-copy" path="$PROJECT_DIR$/name.png" />
+      <element id="file-copy" path="$PROJECT_DIR$/paddle_horizontal.png" />
+      <element id="file-copy" path="$PROJECT_DIR$/paddle_vertical.png" />
+      <element id="file-copy" path="$PROJECT_DIR$/powerUp.jpg" />
+      <element id="file-copy" path="$PROJECT_DIR$/tune.wav" />
+      <element id="file-copy" path="$PROJECT_DIR$/1.wav" />
+      <element id="file-copy" path="$PROJECT_DIR$/back.jpg" />
+      <element id="file-copy" path="$PROJECT_DIR$/back.wav" />
+      <element id="file-copy" path="$PROJECT_DIR$/ball.jpeg" />
+      <element id="file-copy" path="$PROJECT_DIR$/defend.jpg" />
+      <element id="file-copy" path="$PROJECT_DIR$/defender.jpg" />
+      <element id="dir-copy" path="$PROJECT_DIR$/src" />
+    </root>
+  </artifact>
+</component>

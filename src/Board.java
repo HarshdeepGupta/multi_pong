@@ -52,6 +52,14 @@ public class Board extends JPanel implements Runnable{
     private int difficult;
     private int number_of_players;
     private boolean is_host;
+    private boolean power_packet_sent[];
+    private boolean all_packets_sent;
+    private boolean all_players_disconnect=false;
+    private boolean[] disconnected_machines = new boolean[4];
+    private int global_type;
+    private int global_x;
+    private int global_y;
+    private long global_time_stamp;
     //public static ArrayList<powerUp> powerUps;
 
 
@@ -73,6 +81,19 @@ public class Board extends JPanel implements Runnable{
         this.myid = myid;
         this.my_ip = my_ip;
         this.ip_array = ip_array;
+        power_packet_sent = new boolean[number_of_players+1];
+        for(int i=0;i<=number_of_players;i++){
+            if(i==myid){
+                power_packet_sent[i] = true;
+            }
+            else{
+                power_packet_sent[i] = false;
+            }
+        }
+        for(int i=0;i<4;i++){
+            disconnected_machines[i] = false;
+        }
+        //send_power_packet();
     }
 
 
@@ -152,11 +173,14 @@ public class Board extends JPanel implements Runnable{
             }
         }
 
+
+
         for(int i=0;i<4;i++){
             lives[i]=3;
         }
 
         bot_array_multi = new Bot[3];// To store dynamically created bots on disconnection
+
     }
 
 
@@ -382,27 +406,47 @@ public class Board extends JPanel implements Runnable{
 //                System.out.println(x);
                 double randy = 500*Math.random();
                 int y = ((int) randy);
-                if(is_host) {
+                if(is_host && number_of_players==0) {
                     if (rand < .05 && !fastPaddle) {
                         fastPaddle = true;
-                        powerUps.add(new powerUp(4, x, y, System.currentTimeMillis()));
-                        send_power_packet(4,x,y,System.currentTimeMillis());
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(4, x, y, time));
+                        global_type = 4;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
                     } else if (rand < 0.01 && !dirChange) {
                         dirChange = true;
-                        powerUps.add(new powerUp(5, x, y, System.currentTimeMillis()));
-                        send_power_packet(5,x,y,System.currentTimeMillis());
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(5, x, y, time));
+                        global_type = 5;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
                     } else if (rand < 0.02 && !elongate) {
                         elongate = true;
-                        powerUps.add(new powerUp(3, x, y, System.currentTimeMillis()));
-                        send_power_packet(3,x,y,System.currentTimeMillis());
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(3, x, y, time));
+                        global_type = 3;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
                     } else if (rand < 0.03 && !freeze) {
                         freeze = true;
-                        powerUps.add(new powerUp(2, x, y, System.currentTimeMillis()));
-                        send_power_packet(2,x,y,System.currentTimeMillis());
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(2, x, y, time));
+                        global_type = 2;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
                     } else if (rand < 0.04 && !live) {
                         live = true;
-                        powerUps.add(new powerUp(1, x, y, System.currentTimeMillis()));
-                        send_power_packet(1,x,y,System.currentTimeMillis());
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(1, x, y, time));
+                        global_type = 1;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
                     }
 
                     //update power ups
@@ -754,35 +798,95 @@ public class Board extends JPanel implements Runnable{
         powerUps.add(new powerUp(type,x,y,time_stamp));
     }
 
-    public void send_power_packet(int type,int x,int y,long time_stamp){
+    public void send_power_packet(){
+        final Thread listen_to_ack = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(all_packets_sent);
         try{
             //System.out.println("time".concat(String.valueOf(System.currentTimeMillis())));
             //if(this.wall_hit!=0){
-            byte[] buf = new byte[256];
-            String temp = "8#my_ip=";
-            String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
-                    .concat("#type=").concat(String.valueOf(type))
-                    .concat("#x_position=").concat(String.valueOf(x))
-                    .concat("#y_position=").concat(String.valueOf(y))
-                    .concat("#time_stamp=").concat(String.valueOf(time_stamp))
-                    .concat("#time=")
-                    .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
-            buf = my_id.getBytes();// here we want our ip-address instead
-            System.out.println("sent".concat(my_id));
-            for (int i = 0; i <= number_of_players; i++) {
-                if(i!=myid) {
-                    InetAddress address = InetAddress.getByName(ip_array[i]);
-                    DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
-                    socket1.send(packet);
+
+            while(all_packets_sent==false && number_of_players!=0 && all_players_disconnect==false){
+                byte[] buf = new byte[256];
+                String temp = "8#my_ip=";
+                String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
+                        .concat("#type=").concat(String.valueOf(global_type))
+                        .concat("#x_position=").concat(String.valueOf(global_x))
+                        .concat("#y_position=").concat(String.valueOf(global_y))
+                        .concat("#time_stamp=").concat(String.valueOf(global_time_stamp))
+                        .concat("#time=")
+                        .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
+                buf = my_id.getBytes();// here we want our ip-address instead
+
+                for (int i = 0; i <= number_of_players; i++) {
+                    if (i != myid) {
+                        System.out.println("sent".concat(my_id));
+                        InetAddress address = InetAddress.getByName(ip_array[i]);
+                        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
+                        socket1.send(packet);
+                    }
                 }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    System.out.println("Interrupted: " + e.getMessage());
+                }
+                //}
             }
-            //}
+            all_packets_sent = false;
+            System.out.println("getting here");
         }
         catch (IOException e) {
 
         }
+            }
+    });
+        listen_to_ack.start();
     }
 
+    public void setPower_packet_sent(boolean x,int id){
+        power_packet_sent[id] = x;
+        boolean temp = true;
+        for(int i=0;i<number_of_players;i++){
+            temp = temp && power_packet_sent[i];
+        }
+        if(temp==true){
+            System.out.println("all_packets_sent".concat(String.valueOf(all_packets_sent)));
+            all_packets_sent = true;
+            System.out.println("all_packets_sent".concat(String.valueOf(all_packets_sent)));
+            for(int i=0;i<=number_of_players;i++){
+                if(i==myid || disconnected_machines[i]==true){
+                    power_packet_sent[i] = true;
+                }
+                else{
+                    power_packet_sent[i] = false;
+                }
+            }
+        }
+        else{
+            all_packets_sent = false;
+        }
+    }
+
+
+    public void disconnect(int id){
+        for(int i=0;i<=number_of_players;i++){
+            if(i==myid || i==id){
+                disconnected_machines[i] = true;
+            }
+        }
+        boolean temp  = true;
+        for(int i=0;i<=number_of_players;i++){
+            temp  = temp && disconnected_machines[i];
+        }
+        if(temp){
+            all_players_disconnect = true;
+        }
+        else{
+            all_players_disconnect = false;
+        }
+    }
 
 
 
