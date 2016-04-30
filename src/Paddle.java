@@ -79,13 +79,23 @@ public class Paddle extends Sprite implements Commons {
     public void keyPressed(KeyEvent e) {
 
         int key = e.getKeyCode();
-        if(paddleID==1||paddleID==2){
+        if(paddleID==1){
             if (key == KeyEvent.VK_LEFT) {
                 paddleVelocity.X = -paddleSpeed;
             }
 
             if (key == KeyEvent.VK_RIGHT) {
                 paddleVelocity.X = paddleSpeed;
+            }
+
+        }
+        if(paddleID==2){
+            if (key == KeyEvent.VK_LEFT) {
+                paddleVelocity.X = paddleSpeed;
+            }
+
+            if (key == KeyEvent.VK_RIGHT) {
+                paddleVelocity.X = -paddleSpeed;
             }
 
         }

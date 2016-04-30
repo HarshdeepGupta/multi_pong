@@ -23,7 +23,7 @@ public class server extends gui implements Commons{
     public ButtonHandler bHandler;
     public ButtonHandler1 bHandler1;
     static DatagramSocket socket1;
-    private final int DELAY = 10;
+    private final int DELAY = 100;
     String[] ip_array = new String[4];
     int[] port_array = new int[4];
     long[] last_connected = new long[4];// To determine disconnection
@@ -32,8 +32,13 @@ public class server extends gui implements Commons{
 
     int myid=0;// global player_id in the game
     //String my_ip = InetAddress.getLocalHost().getHostAddress().toString();
+<<<<<<< HEAD
     String my_ip = "192.168.0.100";
     int my_port;
+=======
+    String my_ip = "192.168.0.103";
+    int my_port = 27015;
+>>>>>>> refs/remotes/origin/master
 
     int number_of_players=0;
 
@@ -56,6 +61,7 @@ public class server extends gui implements Commons{
     int current_host = 0;
     long time_array_score[] = new long[4];
     ArrayList<powerUp> powerUps;
+    long last_power_up = 0;
     //ArrayList<powerUp> powerCollect;
 
     JFrame jf;
@@ -69,7 +75,7 @@ public class server extends gui implements Commons{
         bHandler1 = new ButtonHandler1();
         sendButton.addActionListener (bHandler);
         connect.addActionListener(bHandler1);
-        socket1 = new DatagramSocket ();
+        socket1 = new DatagramSocket (my_port);
         my_port = socket1.getLocalPort();
         System.out.println(my_port);
         txArea.setText(info);
@@ -148,8 +154,9 @@ public class server extends gui implements Commons{
     private class ButtonHandler1 implements ActionListener {
         public void actionPerformed(ActionEvent event) //throws IOException
         {
+            int counter = 0;
 
-            while (host_connection == false) {
+            while (host_connection == false && counter <50) {
                 try {
                     // here we send our ip and our port to the host
                     //DatagramSocket socket = new DatagramSocket ();
@@ -169,7 +176,7 @@ public class server extends gui implements Commons{
                         System.out.println("Interrupted: " + e.getMessage());
                     }
                 } catch (IOException e) {
-
+                    /*
                     try {
                         // here we send our ip and our port to the host
                         //DatagramSocket socket = new DatagramSocket ();
@@ -186,7 +193,12 @@ public class server extends gui implements Commons{
                     } catch (IOException exception) {
 
                     }
+                    */
                 }
+                counter++;
+            }
+            if(counter==50){// COULD NOT CONNECT TO HOST
+                System.out.println("COULD NOT CONNECT TO HOST");
             }
         }
     }
@@ -323,8 +335,8 @@ public class server extends gui implements Commons{
                                 boolean contains=false;
                                 String received_ip  = received.substring(received.indexOf("ip") + 3, received.indexOf("port") - 1);
 
-                                for (int i=0;i<number_of_players;i++){
-
+                                for (int i=0;i<=number_of_players;i++){
+                                    //TODO ERROR HERE
                                     if(ip_array[i].equals(received_ip)){
                                         contains = true;
                                     }
@@ -522,6 +534,9 @@ public class server extends gui implements Commons{
                                 else if(type==2){
                                     start_connection[id]=true;
                                 }
+                                else if(type==3){
+                                    board.setPower_packet_sent(true,id);
+                                }
                                 //boolean all_players_ready = true;
                                 boolean temp=true;
                                 for(int i=1;i<=number_of_players;i++){
@@ -550,6 +565,7 @@ public class server extends gui implements Commons{
 
                                 if(paddles[id].getIsBot()==false) {
                                     board.add_bot(id);
+                                    board.disconnect(id);
                                 }
 
                             }
@@ -622,6 +638,7 @@ public class server extends gui implements Commons{
                                 current_host = id;
                                 if(current_host==myid){
                                     is_host =true;
+                                    board.setIs_host(true);
                                 }
 
                             }
@@ -634,8 +651,24 @@ public class server extends gui implements Commons{
                                         ,received.indexOf("y_position")+received.substring(received.indexOf("y_position"),received.length()).indexOf("#")));
                                 long time_stamp = Long.parseLong(received.substring(received.indexOf("time_stamp")+11
                                         ,received.indexOf("time_stamp")+received.substring(received.indexOf("time_stamp"),received.length()).indexOf("#")));
-                                board.add_powerup(type,x,y,time_stamp);
+                                if(time_stamp-last_power_up>=100){
+                                    board.add_powerup(type,x,y,time_stamp);
+                                }
+                                last_power_up = time_stamp;
+                                for(int pa=0;pa<10;pa++) {
+                                    try {
+                                        buf = new byte[256];
+                                        String temp = "3#type=3".concat("#ip=").concat(my_ip);
+                                        String my_id = temp.concat("#time=").concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
+                                        buf = my_id.getBytes();// here we want our ip-address instead
+                                        InetAddress address = InetAddress.getByName(ip_array[current_host]);
+                                        packet = new DatagramPacket(buf, buf.length, address, port_array[current_host]);
+                                        socket1.send(packet);
+                                        System.out.println(my_id);
+                                    } catch (IOException e) {
 
+                                    }
+                                }
 
 
                             }
@@ -702,6 +735,7 @@ public class server extends gui implements Commons{
                             if(id_disconnect==current_host && id_disconnect!=myid){
                                 current_host = myid;
                                 is_host = true;
+                                board.setIs_host(true);
                                 try{
                                     byte[] buf = new byte[256];
                                     String temp = "7#from=".concat(my_ip).concat("#new_host=").concat("#");
@@ -731,10 +765,12 @@ public class server extends gui implements Commons{
                                 buf = my_id.getBytes();// here we want our ip-address instead
                                 if(paddles[id_disconnect].getIsBot()==false) {
                                     board.add_bot(id_disconnect);
+                                    board.disconnect(id_disconnect);
                                 }
+                                System.out.println("sent".concat(my_id));
                                 for (int i = 0; i <= number_of_players; i++) {
                                     if (i!=id_disconnect && i!=myid) {
-                                        System.out.println("sent".concat(my_id));
+
                                         InetAddress address = InetAddress.getByName(ip_array[i]);
                                         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
                                         socket1.send(packet);

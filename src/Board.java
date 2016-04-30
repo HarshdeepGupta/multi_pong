@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import javax.swing.*;
 
-public class Board extends JPanel implements Runnable{
+public class Board extends JPanel implements Runnable, Commons{
 
 
     private final int DELAY = 25;
@@ -28,8 +28,6 @@ public class Board extends JPanel implements Runnable{
     private Bot[] botarray;
     private int myid;
 
-
-
     private boolean running;
     private int[] specialPaddle = new int[6];
     private boolean freeze;
@@ -42,12 +40,15 @@ public class Board extends JPanel implements Runnable{
     private boolean dirChange = false;
     private boolean freezeOver = true;
     private int[] lives = new int[4];
+    private boolean[] hold = new boolean[4];
     private int[] speed = new int[4];
+    private long[] holdTimer = new long[4];
 
-
+    private int playersOut = 0;
     private long waitTimer;
     private long waitTimerDiff;
     private boolean wait;
+    private boolean winner;
     private int waitDelay = 1000 ;
     public static ArrayList<powerUp> powerUps;
     public static ArrayList<powerUp> powerCollect;
@@ -55,6 +56,14 @@ public class Board extends JPanel implements Runnable{
     private int difficult;
     private int number_of_players;
     private boolean is_host;
+    private boolean power_packet_sent[];
+    private boolean all_packets_sent;
+    private boolean all_players_disconnect=false;
+    private boolean[] disconnected_machines = new boolean[4];
+    private int global_type;
+    private int global_x;
+    private int global_y;
+    private long global_time_stamp;
     //public static ArrayList<powerUp> powerUps;
 
 
@@ -76,6 +85,19 @@ public class Board extends JPanel implements Runnable{
         this.myid = myid;
         this.my_ip = my_ip;
         this.ip_array = ip_array;
+        power_packet_sent = new boolean[number_of_players+1];
+        for(int i=0;i<=number_of_players;i++){
+            if(i==myid){
+                power_packet_sent[i] = true;
+            }
+            else{
+                power_packet_sent[i] = false;
+            }
+        }
+        for(int i=0;i<4;i++){
+            disconnected_machines[i] = false;
+        }
+        //send_power_packet();
     }
 
 
@@ -84,10 +106,16 @@ public class Board extends JPanel implements Runnable{
         this.single_player = single_player;
         this.number_of_players = players;
         initBoard(id);
+        for (int j = 0; j < 4; j++){
+            hold[j] = true;
+            holdTimer[j] = 0;
+        }
+        winner = false;
     }
 
 
     private void initBoard(int id) {
+
         setBackground(Color.DARK_GRAY);
         myid = id;
 
@@ -97,7 +125,8 @@ public class Board extends JPanel implements Runnable{
         powerUps = new ArrayList<powerUp>();
         powerCollect = new ArrayList<powerUp>();
 
-        difficult=getDifficult();
+        //difficult=getDifficult();
+        difficult = 2;
         freeze = false;
 
         /*Paddle ID 1 is at the  top edge
@@ -155,11 +184,14 @@ public class Board extends JPanel implements Runnable{
             }
         }
 
+
+
         for(int i=0;i<4;i++){
             lives[i]=3;
         }
 
         bot_array_multi = new Bot[3];// To store dynamically created bots on disconnection
+
     }
 
 
@@ -207,9 +239,6 @@ public class Board extends JPanel implements Runnable{
             default:
 
         }
-
-
-
 
         drawGameObjects(g2d);
 
@@ -337,26 +366,21 @@ public class Board extends JPanel implements Runnable{
 
         while (running) {
 
-            if (waitTimer == 0 && wait){
+            if (waitTimer == 0 && wait) {
                 wait = false;
 
                 waitTimer = System.currentTimeMillis();
-            }
-            else {
+            } else {
 
                 waitTimerDiff = System.currentTimeMillis() - waitTimer;
-                if (waitTimerDiff < waitDelay){
-                    drawText(3,0);
-                }
-                else if (waitTimerDiff > waitDelay && waitTimerDiff < 2 * waitDelay){
+                if (waitTimerDiff < waitDelay) {
+                    drawText(3, 0);
+                } else if (waitTimerDiff > waitDelay && waitTimerDiff < 2 * waitDelay) {
                     //System.out.println(89);
-                    drawText(2,waitDelay);
-                }
-                else if (waitTimerDiff > 2 * waitDelay && waitTimerDiff < 3 * waitDelay){
-                    drawText(1,2*waitDelay);
-                }
-
-                else {
+                    drawText(2, waitDelay);
+                } else if (waitTimerDiff > 2 * waitDelay && waitTimerDiff < 3 * waitDelay) {
+                    drawText(1, 2 * waitDelay);
+                } else {
                     wait = true;
                     waitTimerDiff = 0;
                 }
@@ -368,7 +392,8 @@ public class Board extends JPanel implements Runnable{
 
             //repaint();
 
-            if (wait){
+            //remove losy playes
+            if (wait) {
                 beforeTime = System.currentTimeMillis();
                 checkCollision();
                 updatePowerUp();
@@ -376,118 +401,225 @@ public class Board extends JPanel implements Runnable{
                 ball.moveBall();
                 movePaddles();
 
+                Graphics g2d = this.getGraphics();
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                //losing players
+                for (int i = 0; i < 4; i++) {
+                    if (lives[i] == 0 && hold[i]) {
+                        //drawOutPlayer(i);
+                        playersOut++;
+                        paddleArray[i].setHeight(0);
+                        paddleArray[i].setWidth(0);
+                        long holdTimerDiff;
+                        long holdDelay = 1000;
+                        System.out.println("HI, Player" + (i + 1) + " is out of the game");
+                        if (holdTimer[i] == 0) {
+                            hold[i] = false;
+                            System.out.println(2);
+                            holdTimer[i] = System.currentTimeMillis();
+                        }
+                        holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        while (holdTimerDiff < holdDelay) {
+                            holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                            g2d.drawString("Player" + (i + 1) + " is out of the game", 140, 250);
+                        }
+                        while (holdTimerDiff < 2 * holdDelay) {
+                            holdTimerDiff = System.currentTimeMillis() - holdTimer[i];
+                        }
+                    }
+                }
 
                 //chance for power ups
                 double rand = Math.random();
-                double randx = 0.95*getWidth()*Math.random();
+                double randx = 0.90 * getWidth() * Math.random();
                 int x = ((int) randx);
-                double randy = 0.95*getHeight()*Math.random();
+                double randy = 0.90 * getHeight() * Math.random();
                 int y = ((int) randy);
-                if (ball.last_hit_by > 0) {
-                    
-                    if (rand < 0.0005 && !live) {
-                        //System.out.println("Here4");
-                        live = true;
-                        powerUps.add(new powerUp(1, x, y, System.currentTimeMillis()));
-                    } else if (rand < 0.001 && !freeze && freezeOver) {
-                        //System.out.println("Here3");
-                        freeze = true;
-                        powerUps.add(new powerUp(2, x, y, System.currentTimeMillis()));
-                    } else if (rand < 0.0015 && !elongate && elongateOver) {
-                        //System.out.println("Here2");
-                        elongate = true;
-                        powerUps.add(new powerUp(3, x, y, System.currentTimeMillis()));
-                    } else if (rand < .002 && !fastPaddle && fastPaddleOver) {
-                        //System.out.println("Here1");
+
+                if (is_host && number_of_players == 0) {
+                    if (rand < .05 && !fastPaddle) {
                         fastPaddle = true;
-                        powerUps.add(new powerUp(4, x, y, System.currentTimeMillis()));
-                    } else if (rand < 0.0025 && !dirChange) {
-                        //System.out.println("Here4");
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(4, x, y, time));
+                        global_type = 4;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
+                    } else if (rand < 0.01 && !dirChange) {
                         dirChange = true;
-                        powerUps.add(new powerUp(5, x, y, System.currentTimeMillis()));
-                    } else if (rand < 0.003 && !blackbox) {
-                        //System.out.println("Here4");
-                        blackbox = true;
-                        powerUps.add(new powerUp(6, x, y, System.currentTimeMillis()));
-                    }
-                }
-                //update power ups
-                for (int i = 0; i < powerUps.size(); i++) {
-                    boolean remove = powerUps.get(i).update();
-                    if (remove) {
-                        powerUps.remove(i);
-                        i--;
-                    }
-                }
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(5, x, y, time));
+                        global_type = 5;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
+                    } else if (rand < 0.02 && !elongate) {
+                        elongate = true;
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(3, x, y, time));
+                        global_type = 3;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
+                    } else if (rand < 0.03 && !freeze) {
+                        freeze = true;
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(2, x, y, time));
+                        global_type = 2;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
+                    } else if (rand < 0.04 && !live) {
+                        live = true;
+                        long time = System.currentTimeMillis();
+                        powerUps.add(new powerUp(1, x, y, time));
+                        global_type = 1;
+                        global_x = x;
+                        global_y = y;
+                        global_time_stamp = time;
 
-                if(single_player) {
-                    for(int i=0;i<3;i++)
-                        if (botarray[i].is_attached()) {
-                            botarray[i].updateBot();
+                        if (ball.last_hit_by > 0) {
+
+                            if (rand < 0.0005 && !live) {
+                                //System.out.println("Here4");
+                                live = true;
+                                powerUps.add(new powerUp(1, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.001 && !freeze && freezeOver) {
+                                //System.out.println("Here3");
+                                freeze = true;
+                                powerUps.add(new powerUp(2, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.0015 && !elongate && elongateOver) {
+                                //System.out.println("Here2");
+                                elongate = true;
+                                powerUps.add(new powerUp(3, x, y, System.currentTimeMillis()));
+                            } else if (rand < .002 && !fastPaddle && fastPaddleOver) {
+                                //System.out.println("Here1");
+                                fastPaddle = true;
+                                powerUps.add(new powerUp(4, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.0025 && !dirChange) {
+                                //System.out.println("Here4");
+                                dirChange = true;
+                                powerUps.add(new powerUp(5, x, y, System.currentTimeMillis()));
+                            } else if (rand < 0.003 && !blackbox) {
+                                //System.out.println("Here4");
+                                blackbox = true;
+                                powerUps.add(new powerUp(6, x, y, System.currentTimeMillis()));
+                            }
                         }
-                }
-                else{
-                    for(int i=0;i<botarray.length;i++)
-                        if (botarray[i].is_attached()) {
-                            botarray[i].updateBot();
+                        //update power ups
+                        for (int i = 0; i < powerUps.size(); i++) {
+                            boolean remove = powerUps.get(i).update();
+                            if (remove) {
+                                powerUps.remove(i);
+                                i--;
+                            }
                         }
-                }
 
 
-                repaint();
-                timeDiff = System.currentTimeMillis() - beforeTime;
-                sleep = DELAY - timeDiff;
+                        if (single_player) {
+                            for (int i = 0; i < 3; i++)
+                                if (botarray[i].is_attached()) {
+                                    botarray[i].updateBot();
+                                }
+                        } else {
+                            for (int i = 0; i < botarray.length; i++)
+                                if (botarray[i].is_attached()) {
+                                    botarray[i].updateBot();
+                                }
+                        }
 
-                if (sleep < 0) {
-                    sleep = 2;
-                }
+                        if (playersOut == 3 && !winner) {
+                            //game over declare the remaining player as winner
+                            long winnerTimerDiff;
+                            long winnerDelay = 3000;
+                            long winnerTimer = System.currentTimeMillis();
+                            winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                            for (int k = 0; k < 4; k++) {
+                                if (lives[k] > 0) {
+                                    g2d.setColor(Color.WHITE);
+                                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+                                    System.out.println("HI, Player" + (k + 1) + " is the winner");
 
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException e) {
-                    System.out.println("Interrupted: " + e.getMessage());
+//                            while (winnerTimerDiff < 1.5*winnerDelay) {
+//                                winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+//                                g.drawString(" ", 170, 250);
+//                            }
+                                    while (winnerTimerDiff < winnerDelay) {
+                                        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+                                        g2d.drawString("Player" + (k + 1) + " is the winner", 170, 250);
+                                        winner = true;
+                                    }
+                                }
+                            }
+                            rematch();
+                        }
+                    }
+
+
+                    repaint();
+
+                    timeDiff = System.currentTimeMillis() - beforeTime;
+                    sleep = DELAY - timeDiff;
+
+                    if (sleep < 0) {
+                        sleep = 2;
+                    }
+
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException e) {
+                        System.out.println("Interrupted: " + e.getMessage());
+                    }
+
+
                 }
 
             }
-
-            /*for (int i = 0; i < 4; i++) {
-                if (lives[i] == 0) {
-                    //drawOutPlayer(i);
-                    wait = true;
-                    waitTimer = 0;
-                    waitTimerDiff = 0;
-                    running = true;
-
-
-                    Graphics g2d = this.getGraphics();
-                    g2d.setFont(new Font("Century Gothic", Font.PLAIN, 20));
-
-                    //long beforeTime, timeDiff, sleep;
-
-                    while (running) {
-
-                        if (waitTimer == 0 && wait){
-                            wait = false;
-                            System.out.println(2);
-                            waitTimer = System.currentTimeMillis();
-                        }
-                        else {
-
-                            waitTimerDiff = System.currentTimeMillis() - waitTimer;
-                            if (waitTimerDiff < waitDelay){
-                                g2d.drawString("HI, you are out of the game", 200, 250);
-                            }
-                            else {
-                                wait = true;
-                                waitTimerDiff = 0;
-                            }
-                        }
-
-                    }
-                }
-            }*/
-
         }
+    }
+
+    private void rematch(){
+        long winnerTimerDiff;
+        long winnerDelay = 1000;
+        long winnerTimer = System.currentTimeMillis();
+        winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+        Graphics g = this.getGraphics();
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+        while (winnerTimerDiff < 5*winnerDelay) {
+            winnerTimerDiff = System.currentTimeMillis() - winnerTimer;
+            g.drawString("Rematch starts in 5 sec", 180, 250);
+        }
+
+        winner = false;
+        playersOut = 0;
+        for (int j = 0; j < 4; j++){
+            hold[j] = true;
+            lives[j] = 3;
+            if (paddleArray[j].getMove_x()) paddleArray[j].setWidth(60);
+            if (paddleArray[j].getMove_y()) paddleArray[j].setWidth(5);
+            if (paddleArray[j].getMove_y()) paddleArray[j].setHeight(60);
+            if (paddleArray[j].getMove_x()) paddleArray[j].setHeight(5);
+            if (j == 0) {
+                paddleArray[j].setX(INIT_PADDLE1_X);
+                paddleArray[j].setY(INIT_PADDLE1_Y);
+            }
+            if (j == 1) {
+                paddleArray[j].setX(INIT_PADDLE2_X);
+                paddleArray[j].setY(INIT_PADDLE2_Y);
+            }
+            if (j == 2) {
+                paddleArray[j].setX(INIT_PADDLE3_X);
+                paddleArray[j].setY(INIT_PADDLE3_Y);
+            }
+            if (j == 3) {
+                paddleArray[j].setX(INIT_PADDLE4_X);
+                paddleArray[j].setY(INIT_PADDLE4_Y);
+            }
+        }
+        ball.setX(250);
+        ball.setY(250);
     }
 
 
@@ -823,35 +955,95 @@ public class Board extends JPanel implements Runnable{
         powerUps.add(new powerUp(type,x,y,time_stamp));
     }
 
-    public void send_power_packet(int type,int x,int y,long time_stamp){
+    public void send_power_packet(){
+        final Thread listen_to_ack = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(all_packets_sent);
         try{
             //System.out.println("time".concat(String.valueOf(System.currentTimeMillis())));
             //if(this.wall_hit!=0){
-            byte[] buf = new byte[256];
-            String temp = "8#my_ip=";
-            String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
-                    .concat("#type=").concat(String.valueOf(type))
-                    .concat("#x_position=").concat(String.valueOf(x))
-                    .concat("#y_position=").concat(String.valueOf(y))
-                    .concat("#time_stamp=").concat(String.valueOf(time_stamp))
-                    .concat("#time=")
-                    .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
-            buf = my_id.getBytes();// here we want our ip-address instead
-            System.out.println("sent".concat(my_id));
-            for (int i = 0; i <= number_of_players; i++) {
-                if(i!=myid) {
-                    InetAddress address = InetAddress.getByName(ip_array[i]);
-                    DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
-                    socket1.send(packet);
+
+            while(all_packets_sent==false && number_of_players!=0 && all_players_disconnect==false){
+                byte[] buf = new byte[256];
+                String temp = "8#my_ip=";
+                String my_id = temp.concat(my_ip).concat("#my_id=").concat(String.valueOf(myid))
+                        .concat("#type=").concat(String.valueOf(global_type))
+                        .concat("#x_position=").concat(String.valueOf(global_x))
+                        .concat("#y_position=").concat(String.valueOf(global_y))
+                        .concat("#time_stamp=").concat(String.valueOf(global_time_stamp))
+                        .concat("#time=")
+                        .concat(String.valueOf(java.lang.System.currentTimeMillis())).concat("#");
+                buf = my_id.getBytes();// here we want our ip-address instead
+
+                for (int i = 0; i <= number_of_players; i++) {
+                    if (i != myid) {
+                        System.out.println("sent".concat(my_id));
+                        InetAddress address = InetAddress.getByName(ip_array[i]);
+                        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port_array[i]);
+                        socket1.send(packet);
+                    }
                 }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    System.out.println("Interrupted: " + e.getMessage());
+                }
+                //}
             }
-            //}
+            all_packets_sent = false;
+            System.out.println("getting here");
         }
         catch (IOException e) {
 
         }
+            }
+    });
+        listen_to_ack.start();
     }
 
+    public void setPower_packet_sent(boolean x,int id){
+        power_packet_sent[id] = x;
+        boolean temp = true;
+        for(int i=0;i<number_of_players;i++){
+            temp = temp && power_packet_sent[i];
+        }
+        if(temp==true){
+            System.out.println("all_packets_sent".concat(String.valueOf(all_packets_sent)));
+            all_packets_sent = true;
+            System.out.println("all_packets_sent".concat(String.valueOf(all_packets_sent)));
+            for(int i=0;i<=number_of_players;i++){
+                if(i==myid || disconnected_machines[i]==true){
+                    power_packet_sent[i] = true;
+                }
+                else{
+                    power_packet_sent[i] = false;
+                }
+            }
+        }
+        else{
+            all_packets_sent = false;
+        }
+    }
+
+
+    public void disconnect(int id){
+        for(int i=0;i<=number_of_players;i++){
+            if(i==myid || i==id){
+                disconnected_machines[i] = true;
+            }
+        }
+        boolean temp  = true;
+        for(int i=0;i<=number_of_players;i++){
+            temp  = temp && disconnected_machines[i];
+        }
+        if(temp){
+            all_players_disconnect = true;
+        }
+        else{
+            all_players_disconnect = false;
+        }
+    }
 
 
 

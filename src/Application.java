@@ -25,7 +25,7 @@ public class Application extends JFrame {
         setResizable(false);
         setSize(920, 575);
 
-        setTitle("Multipong Intern");
+        setTitle("Multipong");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
     }
