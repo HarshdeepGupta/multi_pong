@@ -118,6 +118,7 @@ public class server extends gui implements Commons{
         startGroup.addActionListener(bHandler2);
         socket1 = new DatagramSocket ();
         my_port = socket1.getLocalPort();
+        my_ip = myipArea.getText();
         container1 = this;
         for (int i=0;i<4;i++){
             ip_array[i] = "";
@@ -617,6 +618,8 @@ public class server extends gui implements Commons{
                                 int received_player_id = Integer.parseInt(received.substring(received.indexOf("my_id")+6,received.indexOf("score_id")-1));
                                 String received_ip = received.substring(received.indexOf("my_ip")+6,received.indexOf("my_id")-1);
                                 int score_id = Integer.parseInt(received.substring(received.indexOf("score_id")+9,received.indexOf("time")-1));
+                                if (score_id == 3) score_id = 4;
+                                if (score_id == 4) score_id = 3;
                                 last_connected[received_player_id] = time_stamp;
                                 if(java.lang.System.currentTimeMillis()-time_array_score[score_id]>=1000){
                                     board.reduce_lives(score_id);
