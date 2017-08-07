@@ -1,8 +1,6 @@
-README for Multipong
 
 
-
-Introduction:- 
+# Introduction:- 
 1. This is a classic ping pong where you can either play single player or multi-player.
 2. In single player you face three bots. You can also indulge in a multiplayer game with you friends on LAN or Wifi.
 3. Target of the game is to not let the ball hit your wall and make it hit the opponents wall.
@@ -13,11 +11,11 @@ Introduction:-
 
 
 
-Dependencies :- 
+# Dependencies :- 
 1. Java Version 8 is required to play the game.
 2. Oracle JDK 8 is required to play the game.
 
 
 
-Key Combinations:-
+# Key Combinations:-
 1. Use left and right arrow keys to move your paddle left and right.(As simple as it gets)
